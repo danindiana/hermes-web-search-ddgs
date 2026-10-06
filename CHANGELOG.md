@@ -19,3 +19,4 @@ All entries are 2026-10-06 unless noted. Newest last.
 - **Tested** `systemctl restart docker`: network, rules and service survived.
 - **Deferred** by the user: Brave search (optional, needs a free key).
 - **Consolidated** the docs: current-state summary, lessons, decision log, runbook, 9 more diagrams.
+- **Tried** Tavily keyless: search kept (`web.search_backend: tavily`), keyless extract rejected (placeholder content); extract stays on Keenable. Google PSE not pursued (closed to new customers).

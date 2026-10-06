@@ -111,3 +111,14 @@ and `ufw allow from 172.30.0.0/24 to any port 11434 proto tcp`.
 
 Rollback: remove the `--network` arg; `systemctl disable --now hermes-sandbox-egress`; `ufw delete` that rule;
 `docker network rm hermes-sbx`; recreate the sandbox container.
+
+## Tavily keyless search
+
+```diff
+ web:
+-  search_backend: ddgs
++  search_backend: tavily
+   extract_backend: keenable
+```
+
+No key is set (`TAVILY_API_KEY` absent), so the plugin uses its keyless mode. Rollback: set `search_backend: ddgs` again.

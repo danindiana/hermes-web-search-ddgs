@@ -99,3 +99,9 @@ terminal call (same container name). Egress re-verified inside it: internet 200;
 
 ## Docs consolidation (2026-10-06)
 README restructured (current state, checklist, lessons, decision log, open items), RUNBOOK.md and CHANGELOG.md added, diagrams 44-52. Brave deferred by the user. No system changes.
+
+## Tavily keyless trial (2026-10-06)
+Google PSE: closed to new customers, no Hermes provider -> user chose another free API, Tavily, keyless first.
+`web.search_backend: tavily` verified (log + real results). Keyless extract returned placeholder content for example.com and
+untrustworthy content for an IANA page -> `web.extract_backend` back to keenable (genuine 156 chars). No key set.
+Side note: `hermes chat` printed a web-UI TypeScript build failure from a test file; the repo is clean and up to date, unrelated.

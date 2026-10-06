@@ -1,0 +1,15 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Tavily keyless trial: what was tested and the outcome";
+rankdir=TB;
+q [label="Google PSE requested", color="#39c5cf", fillcolor="#0d2e2e"];
+g [label="Google PSE: closed to new customers (Jan 2026)\nno Hermes provider; not pursued", color="#f85149"];
+t [label="Tavily chosen (free tier, search + extract)\ntried keyless first (no key)", color="#58a6ff", fillcolor="#13294d"];
+s [label="Search (keyless)\nreal results: Wikipedia, graphviz.org, GitHub\nKEPT", color="#3fb950", fillcolor="#1f2937", penwidth=3];
+e [label="Extract (keyless)\nexample.com -> placeholder 'Test Document'\nIANA page content untrustworthy\nREJECTED", color="#f85149"];
+k [label="Extract stays on Keenable\ngenuine example.com text, 156 chars", color="#3fb950", fillcolor="#1f2937"];
+q->g; q->t; t->s; t->e; e->k;
+n [label="Keyless tier terms and limits unknown;\nan optional free key is the upgrade path", color="#d29922", fillcolor="#1f2937", shape=note]; s->n [style=dotted];
+}

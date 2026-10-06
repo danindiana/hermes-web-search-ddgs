@@ -15,7 +15,7 @@
 ![egress](https://img.shields.io/badge/egress-filtered-f0883e?style=for-the-badge)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-52%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-54%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, how it was fixed without any
 paid service or API key, and what grew from it: a browser that runs inside the Docker sandbox, a CLI toolbox image, a
@@ -42,12 +42,13 @@ was wrong along the way, and what is still open.*
 13. [Browser access](#browser-access)
 14. [Corrections and follow-up findings](#corrections-and-follow-up-findings)
 15. [Sandbox upgrade](#sandbox-upgrade)
-16. [Lessons learned](#lessons-learned)
-17. [Decision log](#decision-log)
-18. [Open items](#open-items)
-19. [Runbook and changelog](#runbook-and-changelog)
-20. [Diagram index](#diagram-index)
-21. [Repo layout](#repo-layout)
+16. [Tavily keyless trial and Google PSE](#tavily-keyless-trial-and-google-pse)
+17. [Lessons learned](#lessons-learned)
+18. [Decision log](#decision-log)
+19. [Open items](#open-items)
+20. [Runbook and changelog](#runbook-and-changelog)
+21. [Diagram index](#diagram-index)
+22. [Repo layout](#repo-layout)
 
 ## Current state
 
@@ -55,7 +56,7 @@ Last updated 2026-10-06. Every "verified" entry names the evidence; nothing is r
 
 | Capability | Status | How verified |
 |---|---|---|
-| `web_search` | working, real DuckDuckGo | Hermes `agent.log`: `DDGS search ...: 7 results` |
+| `web_search` | working via **Tavily keyless** (DuckDuckGo `ddgs` stays installed as a one-line alternative) | `agent.log`: `Web search via tavily` / `Tavily keyless search`; first result was Wikipedia's Graphviz page. Earlier ddgs run: `DDGS search ...: 7 results` |
 | `web_extract` | working via Keenable's free tier (third party fetches the page) | example.com returned 156 characters |
 | `terminal` tool | working in `hermes-sandbox:desktop-tools` | `docker exec` checks; real Hermes runs |
 | Browser | working inside the sandbox | `browser_navigate` 2.71 s and `browser_snapshot` 0.83 s in the log; Xvnc, xfwm4, xfdesktop running |
@@ -78,7 +79,7 @@ Docker sandbox on its own network.
 |---|---|---|
 | 1 | `hermes tools post-setup ddgs` (installs `ddgs` into Hermes's managed env, **not** plain pip) | shell |
 | 2 | Remove `web` and `browser` from `agent.disabled_toolsets`; add `web` and `browser` to `platform_toolsets.cli` | `~/.hermes/config.yaml` |
-| 3 | `web.search_backend: ddgs`, `web.extract_backend: keenable` | `config.yaml` |
+| 3 | `web.search_backend: tavily` (keyless; or `ddgs`), `web.extract_backend: keenable` | `config.yaml` |
 | 4 | `browser.backend: 'off'` (stops the Browser Use CLI mode hiding `browser_*`) | `config.yaml` |
 | 5 | Build `hermes-sandbox:desktop-tools` (`sandbox/Dockerfile.*`) and set `terminal.docker_image` | docker + `config.yaml` |
 | 6 | GPU: keep `--gpus=all` and add explicit `--device=/dev/nvidia*` to `terminal.docker_extra_args` | `config.yaml` |
@@ -194,7 +195,8 @@ the *base* runtime Python succeeds too. Neither proves Hermes can load it. Check
 
 | Backend | Key? | Notes |
 |---|---|---|
-| `ddgs` | none | **chosen**; search only (extract via Keenable) |
+| `tavily` | none (keyless opt-in) or free key | **current search backend**; keyless search verified, keyless *extract* rejected (see Tavily section) |
+| `ddgs` | none | previously chosen; installed, one-line switch back; search only |
 | `brave-free` | `BRAVE_SEARCH_API_KEY` | optional, **deferred by the user**; free signup at brave.com/search/api, about 2k queries/month per the plugin manifest |
 | `searxng` | none (self-host) | most private; needs a SearXNG instance |
 | Exa / Parallel / Firecrawl | API key | keyed vendors with extract support |
@@ -499,6 +501,29 @@ Docker, not the model's own report.
 
 ![verification ladder](diagrams/23_verification_ladder.svg)
 
+## Tavily keyless trial and Google PSE
+
+**Google Programmable Search was not pursued.** The Custom Search JSON API is closed to new customers (January 2026),
+new engines can only search up to 50 listed sites, and existing whole-web engines stop on 2027-01-01.
+Hermes also ships no Google PSE provider. Sources: [Brave's summary](https://brave.com/learn/google-api-shutdown/),
+[DEV Community](https://dev.to/markhuang-ai/googles-custom-search-api-dies-in-2027-a-drop-in-isnt-a-migration-9b7).
+
+**Tavily was tried keyless first** (the plugin supports an opt-in keyless mode with no key and no account):
+
+- **Search: kept.** `web.search_backend: tavily` returned real results (Wikipedia, graphviz.org, GitHub for a Graphviz
+  query); Hermes logged `Tavily keyless search` and the agent reported the right first result.
+- **Extract: rejected.** A direct call to the keyless `/extract` endpoint returned a placeholder "Test Document" for
+  `https://example.com` instead of the real page, and the content returned for an IANA page was not trustworthy either.
+  `web.extract_backend` stays on Keenable, which returned the genuine 156-character example.com text in the same test run.
+- **Unknowns:** the keyless tier's limits and terms are not documented here. The free-key upgrade path (a quoted 1,000
+  credits per month on Tavily's free plan, per [costbench](https://costbench.com/software/web-scraping/tavily/free-plan/),
+  not checked against Tavily's own pages) was not needed.
+
+![tavily trial](diagrams/53_tavily_keyless_evaluation.svg)
+![routing](diagrams/54_backend_routing_now.svg)
+
+Lesson: a backend that "returns something" can still return the wrong thing; compare extract output against a known page.
+
 ## Lessons learned
 
 ![lessons](diagrams/47_lessons_learned_map.svg)
@@ -524,7 +549,9 @@ Docker, not the model's own report.
 
 | Decision | Chosen | Why |
 |---|---|---|
-| Search backend | DuckDuckGo (`ddgs`) | no key, no cost |
+| Search backend | DuckDuckGo first, then Tavily keyless (current) | no key, no cost; Tavily search verified |
+| Extract backend | Keenable, not Tavily keyless | Tavily keyless extract returned placeholder content |
+| Google PSE | not pursued | closed to new customers, no Hermes provider |
 | Brave | deferred by the user | optional; needs a free key |
 | Browser placement | sandboxed desktop image | keeps pages the model chooses inside Docker |
 | Egress control | dedicated network + `DOCKER-USER` chain | scopes the rules to the Hermes sandbox only |
@@ -536,7 +563,7 @@ Docker, not the model's own report.
 ![open items](diagrams/52_open_items_roadmap.svg)
 
 - Full machine reboot test (boot ordering, firewall loading at startup).
-- Optional Brave search (free key from the user).
+- Optional Brave search or a Tavily free key (keyless limits unknown).
 - IPv6 egress filtering (the sandbox network has no IPv6).
 - `web_extract` is not covered by the blocklist; pin a local fetcher if that matters.
 
@@ -606,6 +633,8 @@ Re-render with `./render.sh`.
 | 50 | [Config surface map](diagrams/50_config_surface_map.png) |
 | 51 | [Risk register](diagrams/51_risk_register.png) |
 | 52 | [Open items](diagrams/52_open_items_roadmap.png) |
+| 53 | [Tavily keyless evaluation](diagrams/53_tavily_keyless_evaluation.png) |
+| 54 | [Backend routing now](diagrams/54_backend_routing_now.png) |
 
 ## Repo layout
 

@@ -7,7 +7,7 @@ Replace `<sandbox>` with the container name from `docker ps` (`hermes-` plus 8 h
 
 ```bash
 hermes tools list | head -5                                  # web and browser both enabled
-grep -E "Web search via ddgs|DDGS search" ~/.hermes/logs/agent.log | tail -3    # real ddgs, not the rescue ring
+grep -E "Web search via|Tavily keyless|DDGS search" ~/.hermes/logs/agent.log | tail -3    # backend actually used, not the rescue ring
 docker ps --format '{{.Names}} {{.Image}}'                   # sandbox on hermes-sandbox:desktop-tools
 docker exec <sandbox> nvidia-smi -L                          # 2 GPUs
 docker exec <sandbox> sh -c 'command -v jq rg tmux ffmpeg pandoc agent-browser Xvnc'
@@ -50,7 +50,7 @@ Backups: `~/.hermes/config.yaml.bak-<unix-time>` (only the newest 3 are kept).
 
 | Change | Roll back |
 |---|---|
-| Search and extract backends | remove `web.search_backend` / `web.extract_backend`; re-add `web` to `agent.disabled_toolsets` |
+| Search and extract backends | set `web.search_backend: ddgs` (or remove it); remove `web.extract_backend`; to disable web entirely re-add `web` to `agent.disabled_toolsets` |
 | Browser | remove `browser` from `platform_toolsets.cli`, add it back to `disabled_toolsets`, drop `browser.backend` |
 | Domain blocklist | set `security.website_blocklist.enabled: false` |
 | Sandbox image | set `terminal.docker_image` back to `hermes-sandbox:tools` (or `:pdf`), recreate the container |

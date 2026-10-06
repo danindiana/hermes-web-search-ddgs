@@ -1,0 +1,11 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Backend routing now (search vs extract)";
+a [label="web_search", color="#58a6ff", fillcolor="#13294d"]; b [label="web.search_backend: tavily\n(keyless, no key)", color="#3fb950", fillcolor="#1f2937"]; c [label="api.tavily.com /search", color="#39c5cf", fillcolor="#0d2e2e"];
+d [label="web_extract", color="#58a6ff", fillcolor="#13294d"]; e [label="web.extract_backend: keenable\n(keyless free tier)", color="#3fb950", fillcolor="#1f2937"]; f [label="Keenable fetch", color="#39c5cf", fillcolor="#0d2e2e"];
+r [label="keyless rescue ring\n(Exa/Parallel/Keenable)\non failures", color="#d29922", fillcolor="#1f2937"];
+dd [label="ddgs still installed\n(switch back with one line)", color="#bc8cff"];
+a->b->c; d->e->f; b->r [style=dashed]; e->r [style=dashed]; dd->b [style=dotted];
+}
