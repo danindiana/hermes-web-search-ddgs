@@ -8,5 +8,5 @@ subgraph cluster_b { label="before"; color="#f85149"; fontcolor="#f85149"; style
 subgraph cluster_a { label="after (terminal.docker_extra_args)"; color="#3fb950"; fontcolor="#3fb950"; style=rounded;
  a1 [label="--gpus=all", color="#3fb950", fillcolor="#1f2937"]; a2 [label="--device=/dev/nvidia0\n--device=/dev/nvidia1\n--device=/dev/nvidiactl", color="#3fb950", fillcolor="#1f2937"]; a3 [label="--device=/dev/nvidia-uvm\n--device=/dev/nvidia-uvm-tools", color="#3fb950", fillcolor="#1f2937"]; }
 b->a1; a1->a2->a3 [style=invis];
-t [label="Tested: new container sees 2 GPUs, torch CUDA True\nNOT tested: surviving a real systemctl daemon-reload", color="#d29922", fillcolor="#1f2937", shape=note]; a3->t [style=dotted];
+t [label="Tested: new container sees 2 GPUs, torch CUDA True\nTested: survived a real systemctl daemon-reload (1 run)", color="#d29922", fillcolor="#1f2937", shape=note]; a3->t [style=dotted];
 }

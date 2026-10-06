@@ -45,7 +45,13 @@ Operator independently confirmed web search works in the running instance; no re
 ## Follow-up: sandbox upgrade (see also session_1791317605)
 - Built `hermes-sandbox:tools` (jq, ripgrep, tmux, sqlite3, zip, rsync, ffmpeg, pandoc, gh).
 - GPU died in the long-running container after systemd reloads; fixed with explicit `--device` flags.
-  Reload-survival untested.
+  Reload-survival later tested (see below).
 - Added `no-new-privileges` and `--pids-limit=512`; recreated the container; verified via docker exec.
 - A `hermes chat -q` check hallucinated tool output; discarded.
 - Docs: README "Sandbox upgrade" section, diagrams 16-24, `sandbox/Dockerfile.tools`.
+
+## Daemon-reload test (2026-10-06)
+Earlier docs said sudo was unavailable; that was wrong (passwordless `sudo -n` works). Test: sandbox container
+(`--gpus=all` + explicit `--device`) and a control (`--gpus=all` only) both showed 2 GPUs; after one
+`sudo systemctl daemon-reload` the sandbox kept both GPUs and torch CUDA True, the control failed with
+NVML Unknown Error. Control container removed. Single observation.

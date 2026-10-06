@@ -14,7 +14,7 @@
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-24%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-25%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
 config change that fixed it without any paid service or API key, the follow-up that enabled a local
@@ -276,7 +276,8 @@ Symptom: `nvidia-smi` printed `Failed to initialize NVML: Unknown Error` and `to
 `False`, although `--gpus=all` was configured and `/dev/nvidia*` nodes existed. A **fresh** container with
 `--gpus=all` worked (2 GPUs, CUDA True), so the host setup was fine. Docker here uses the systemd cgroup driver
 (cgroup v2) and two systemd reloads had happened since the container started, which is the known way to lose
-device access. The cause is inferred from the symptoms and that control test, not from a trace.
+device access. The cause was then **confirmed by reproduction**: a control container started with `--gpus=all` only lost the GPU
+(same NVML Unknown Error) immediately after one `sudo systemctl daemon-reload`.
 
 ![gpu root cause](diagrams/18_gpu_failure_root_cause.svg)
 
@@ -295,8 +296,11 @@ terminal:
 
 ![gpu fix](diagrams/19_gpu_fix_flags.svg)
 
-**Caveat:** a new container passes with these flags, but surviving a real `systemctl daemon-reload` was **not**
-tested (no sudo in the session). If the GPU dies again, recreate the container.
+**Tested across a reload:** with the sandbox and a `--gpus=all`-only control container both running, one
+`sudo systemctl daemon-reload` left the sandbox with both GPUs and torch CUDA True, while the control lost the GPU
+(`Failed to initialize NVML: Unknown Error`). One reload, one run; it is a single observation, not a soak test.
+
+![reload test](diagrams/25_reload_test.svg)
 
 ### 3. Hardening
 
@@ -361,6 +365,7 @@ Re-render with `./render.sh`.
 | 22 | [Mount blast radius](diagrams/22_mount_blast_radius.png) |
 | 23 | [Verification ladder](diagrams/23_verification_ladder.png) |
 | 24 | [System overview](diagrams/24_system_overview.png) |
+| 25 | [Daemon-reload test](diagrams/25_reload_test.png) |
 
 ## Repo layout
 

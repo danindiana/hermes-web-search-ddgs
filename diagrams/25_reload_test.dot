@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Daemon-reload test: sandbox vs --gpus-only control (single run)";
+a [label="Start control container\n--gpus=all only", color="#58a6ff", fillcolor="#13294d"];
+b [label="Before: both show 2 GPUs", color="#3fb950", fillcolor="#1f2937"];
+r [label="sudo systemctl daemon-reload\nrc=0", color="#d29922", fillcolor="#1f2937"];
+s [label="Sandbox (+ --device flags)\n2 GPUs, torch CUDA True", color="#3fb950", fillcolor="#1f2937"];
+c [label="Control (--gpus only)\nNVML Unknown Error", color="#f85149"];
+a->b->r; r->s; r->c;
+}
