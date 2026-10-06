@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Residual risk register (qualitative, illustrative ratings)";
+rankdir=TB;
+r1 [label="Prompt injection via browsed pages\nmedium: sandboxed, egress-filtered,\nuntrusted-result wrapper", color="#d29922", fillcolor="#1f2937"];
+r2 [label="web_extract bypasses blocklist\nlow-medium: public fetch by 3rd party", color="#d29922", fillcolor="#1f2937"];
+r3 [label="rw mount of /workspace\nmedium: agent can alter those files", color="#f0883e"];
+r4 [label="Keenable/DDG see queries and URLs\nlow: privacy trade-off", color="#d29922", fillcolor="#1f2937"];
+r5 [label="Model hallucinated tool output\nmedium: verify with logs", color="#f0883e"];
+r6 [label="Egress rules untested at cold boot\nlow: unit enabled, restart-tested", color="#3fb950", fillcolor="#1f2937"];
+h [label="Residual risks", color="#58a6ff", fillcolor="#13294d"]; h->r1; h->r2; h->r3; h->r4; h->r5; h->r6;
+}

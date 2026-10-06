@@ -96,3 +96,6 @@ NVML Unknown Error. Control container removed. Single observation.
 back via unless-stopped (Open WebUI healthy, 200). Sandbox (no restart policy) stayed stopped, Hermes restarted it on the next
 terminal call (same container name). Egress re-verified inside it: internet 200; LAN gw, metadata, Tika blocked; Ollama open;
 2 GPUs. Full machine reboot still untested.
+
+## Docs consolidation (2026-10-06)
+README restructured (current state, checklist, lessons, decision log, open items), RUNBOOK.md and CHANGELOG.md added, diagrams 44-52. Brave deferred by the user. No system changes.

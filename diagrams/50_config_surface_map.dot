@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Config surface: which setting controls what";
+rankdir=LR;
+cfg [label="~/.hermes/config.yaml", color="#58a6ff", fillcolor="#13294d"];
+k1 [label="agent.disabled_toolsets\nplatform_toolsets.cli", color="#bc8cff"]; k2 [label="web.search_backend: ddgs\nweb.extract_backend: keenable", color="#bc8cff"]; k3 [label="browser.backend: 'off'", color="#bc8cff"]; k4 [label="security.website_blocklist", color="#bc8cff"]; k5 [label="terminal.docker_image\nterminal.docker_extra_args", color="#bc8cff"];
+f1 [label="which tools exist", color="#3fb950", fillcolor="#1f2937"]; f2 [label="who serves search / extract", color="#3fb950", fillcolor="#1f2937"]; f3 [label="standard browser_* tools", color="#3fb950", fillcolor="#1f2937"]; f4 [label="blocked domains (browser path)", color="#3fb950", fillcolor="#1f2937"]; f5 [label="image, GPU --device, no-new-privileges,\npids-limit, --network=hermes-sbx", color="#3fb950", fillcolor="#1f2937"];
+h [label="Host files:\negress script + systemd unit,\nUFW 11434 rule, docker network hermes-sbx", color="#39c5cf", fillcolor="#0d2e2e"];
+cfg->k1->f1; cfg->k2->f2; cfg->k3->f3; cfg->k4->f4; cfg->k5->f5; k5->h [style=dotted];
+}

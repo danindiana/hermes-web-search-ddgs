@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Lessons: symptom -> hidden cause -> how it was caught";
+rankdir=LR;
+s1 [label="'search works'", color="#d29922", fillcolor="#1f2937"]; c1 [label="keyless rescue masked\nmissing ddgs", color="#f85149"]; d1 [label="Hermes agent.log:\n'ddgs not installed'", color="#3fb950", fillcolor="#1f2937"];
+s2 [label="browser tools missing", color="#d29922", fillcolor="#1f2937"]; c2 [label="Browser Use CLI mode default\n+ no desktop stack in sandbox", color="#f85149"]; d2 [label="log error text +\nbrowser_use_cli.py", color="#3fb950", fillcolor="#1f2937"];
+s3 [label="GPU NVML error", color="#d29922", fillcolor="#1f2937"]; c3 [label="systemd reload drops\ncgroup device rule", color="#f85149"]; d3 [label="control container\nreproduced it", color="#3fb950", fillcolor="#1f2937"];
+s4 [label="model reported success", color="#d29922", fillcolor="#1f2937"]; c4 [label="0 tool calls,\ninvented output", color="#f85149"]; d4 [label="docker exec / logs,\nnot self-report", color="#3fb950", fillcolor="#1f2937"];
+s1->c1->d1; s2->c2->d2; s3->c3->d3; s4->c4->d4;
+}

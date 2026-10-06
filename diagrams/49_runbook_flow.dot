@@ -1,0 +1,16 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Runbook flow: verify, recover, roll back";
+rankdir=TB;
+v [label="Verify (RUNBOOK.md)\nhermes tools list, agent.log,\ndocker exec checks", color="#58a6ff", fillcolor="#13294d"];
+ok [label="all good", color="#3fb950", fillcolor="#1f2937"];
+bad [label="something broken", color="#f85149"];
+t1 [label="search fails -> check log for\n'ddgs not installed' -> post-setup ddgs", color="#d29922", fillcolor="#1f2937"];
+t2 [label="GPU NVML error -> recreate sandbox\n(--device flags present?)", color="#d29922", fillcolor="#1f2937"];
+t3 [label="browser error -> image has desktop stack?\nbrowser.backend 'off'?", color="#d29922", fillcolor="#1f2937"];
+t4 [label="no network in sandbox -> egress chain\n+ hermes-sbx exist?", color="#d29922", fillcolor="#1f2937"];
+rb [label="Rollback: restore config.yaml.bak-*,\nremove --network arg, disable egress unit", color="#f0883e"];
+v->ok; v->bad; bad->t1; bad->t2; bad->t3; bad->t4; t4->rb [style=dotted];
+}

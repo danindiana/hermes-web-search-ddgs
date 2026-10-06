@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Decision log";
+rankdir=TB;
+d1 [label="Search backend?", color="#58a6ff", fillcolor="#13294d"]; a1 [label="ddgs (no key, free)\nCHOSEN", color="#3fb950", fillcolor="#1f2937"]; a1b [label="brave-free: needs key\nDEFERRED by user", color="#d29922", fillcolor="#1f2937"];
+d2 [label="Browser placement?", color="#58a6ff", fillcolor="#13294d"]; a2 [label="Sandboxed desktop image\nCHOSEN (A)", color="#3fb950", fillcolor="#1f2937"]; a2b [label="gateway/host: crosses boundary\nrejected", color="#f85149"]; a2c [label="leave off\nrejected", color="#d29922", fillcolor="#1f2937"];
+d3 [label="Egress control?", color="#58a6ff", fillcolor="#13294d"]; a3 [label="Dedicated network +\nDOCKER-USER chain\nCHOSEN", color="#3fb950", fillcolor="#1f2937"]; a3b [label="proxy allowlist: heavier\nnot pursued", color="#d29922", fillcolor="#1f2937"];
+d4 [label="Reboot test?", color="#58a6ff", fillcolor="#13294d"]; a4 [label="Deferred until user\nis at the machine", color="#d29922", fillcolor="#1f2937"];
+d1->a1; d1->a1b; d2->a2; d2->a2b; d2->a2c; d3->a3; d3->a3b; d4->a4;
+}

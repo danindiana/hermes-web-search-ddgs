@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Verification evidence matrix: claim -> source of truth";
+rankdir=LR;
+c1 [label="ddgs search real", color="#58a6ff", fillcolor="#13294d"]; e1 [label="agent.log\n'DDGS search: 7 results'", color="#3fb950", fillcolor="#1f2937"];
+c2 [label="browser works", color="#58a6ff", fillcolor="#13294d"]; e2 [label="agent.log tool completed\n+ Xvnc/xfwm4 in container", color="#3fb950", fillcolor="#1f2937"];
+c3 [label="blocklist enforced", color="#58a6ff", fillcolor="#13294d"]; e3 [label="log 'Blocked URL' 0.06s\n(browser only)", color="#3fb950", fillcolor="#1f2937"];
+c4 [label="GPU survives reload", color="#58a6ff", fillcolor="#13294d"]; e4 [label="control vs sandbox\nafter daemon-reload", color="#3fb950", fillcolor="#1f2937"];
+c5 [label="egress policy", color="#58a6ff", fillcolor="#13294d"]; e5 [label="/dev/tcp probes inside\nthe real container", color="#3fb950", fillcolor="#1f2937"];
+c6 [label="console error cause", color="#58a6ff", fillcolor="#13294d"]; e6 [label="state.db transcript +\nCLI DOM check", color="#3fb950", fillcolor="#1f2937"];
+c1->e1; c2->e2; c3->e3; c4->e4; c5->e5; c6->e6;
+}

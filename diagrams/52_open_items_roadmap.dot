@@ -1,0 +1,8 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Open items";
+a [label="Full machine reboot test\n(user present)", color="#d29922", fillcolor="#1f2937"]; b [label="Brave search (optional)\nneeds user's free key", color="#d29922", fillcolor="#1f2937"]; c [label="IPv6 egress\nnot configured", color="#d29922", fillcolor="#1f2937"]; d [label="web_extract blocklist gap\ncould pin a local fetcher", color="#d29922", fillcolor="#1f2937"]; e [label="Narrow LAN allow-list\nonly if agent needs it", color="#39c5cf", fillcolor="#0d2e2e"];
+a->b->c->d->e [style=invis];
+}

@@ -2,58 +2,92 @@
 
 <img src="assets/logo.png" alt="hermes://search logo" width="640">
 
-# Giving Hermes Agent the web, plus a sturdier sandbox: DuckDuckGo search, headless browser, tools image, GPU fix
+# Giving Hermes Agent the web, safely: DuckDuckGo search, a sandboxed browser, a toolbox image, GPU fix and egress filtering
 
 ![status](https://img.shields.io/badge/status-search%2C%20extract%20%26%20browser%20live-3fb950?style=for-the-badge)
 ![license](https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge)
 ![hermes](https://img.shields.io/badge/Hermes%20Agent-local-58a6ff?style=for-the-badge)
 ![search](https://img.shields.io/badge/search-DuckDuckGo-de5833?style=for-the-badge&logo=duckduckgo&logoColor=white)
 ![api key](https://img.shields.io/badge/API%20key-none%20needed-39c5cf?style=for-the-badge)
-![browser](https://img.shields.io/badge/browser-headless%20Chromium-58a6ff?style=for-the-badge&logo=googlechrome&logoColor=white)
+![browser](https://img.shields.io/badge/browser-sandboxed%20Chromium-58a6ff?style=for-the-badge&logo=googlechrome&logoColor=white)
 ![docker](https://img.shields.io/badge/sandbox-Docker-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
+![egress](https://img.shields.io/badge/egress-filtered-f0883e?style=for-the-badge)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-43%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-52%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
-*A local Hermes agent said it had no web search. It was right. This repo documents why, the small
-config change that fixed it without any paid service or API key, the follow-up that enabled a local
-headless browser, and a sandbox upgrade (CLI toolbox image, durable GPU fix, hardening flags).*
+*A local Hermes agent said it had no web search. It was right. This repo documents why, how it was fixed without any
+paid service or API key, and what grew from it: a browser that runs inside the Docker sandbox, a CLI toolbox image, a
+GPU fix that survives systemd reloads, hardening flags and egress filtering. It also records what was tested, what
+was wrong along the way, and what is still open.*
 
 </div>
 
 ---
 
 ## Table of contents
-1. [TL;DR](#tldr)
-2. [The question](#the-question)
-3. [Diagnosis](#diagnosis)
-4. [How toolsets resolve](#how-toolsets-resolve)
-5. [The fix](#the-fix)
-6. [Request path](#request-path)
-7. [Gotchas](#gotchas)
-8. [Limits](#limits)
-9. [Alternatives](#alternatives)
-10. [Verification status](#verification-status)
-11. [Troubleshooting](#troubleshooting)
-12. [Browser access](#browser-access)
-13. [Corrections and follow-up findings](#corrections-and-follow-up-findings)
-14. [Sandbox upgrade](#sandbox-upgrade)
-15. [Diagram index](#diagram-index)
-16. [Repo layout](#repo-layout)
+1. [Current state](#current-state)
+2. [TL;DR setup checklist](#tldr-setup-checklist)
+3. [The question](#the-question)
+4. [Diagnosis](#diagnosis)
+5. [How toolsets resolve](#how-toolsets-resolve)
+6. [The fix](#the-fix)
+7. [Request path](#request-path)
+8. [Gotchas](#gotchas)
+9. [Limits](#limits)
+10. [Alternatives](#alternatives)
+11. [Verification status](#verification-status)
+12. [Troubleshooting](#troubleshooting)
+13. [Browser access](#browser-access)
+14. [Corrections and follow-up findings](#corrections-and-follow-up-findings)
+15. [Sandbox upgrade](#sandbox-upgrade)
+16. [Lessons learned](#lessons-learned)
+17. [Decision log](#decision-log)
+18. [Open items](#open-items)
+19. [Runbook and changelog](#runbook-and-changelog)
+20. [Diagram index](#diagram-index)
+21. [Repo layout](#repo-layout)
 
-## TL;DR
+## Current state
 
-| Step | What | Where |
+Last updated 2026-10-06. Every "verified" entry names the evidence; nothing is rated verified on the model's say-so.
+
+| Capability | Status | How verified |
 |---|---|---|
-| 1 | `hermes tools post-setup ddgs` | installs `ddgs` into Hermes's **managed env** (see [corrections](#corrections-and-follow-up-findings)) |
-| 2 | Remove `web` (and `search`) from `agent.disabled_toolsets` | `~/.hermes/config.yaml` |
-| 3 | Add `web` to `platform_toolsets.cli` | `~/.hermes/config.yaml` |
-| 4 | Set `web.search_backend: ddgs` | `~/.hermes/config.yaml` |
-| 5 | Restart the Hermes session and gateway if the tool is missing | shell |
-| 6 | *(follow-up)* Enable the `browser` toolset | see [Browser access](#browser-access) |
+| `web_search` | working, real DuckDuckGo | Hermes `agent.log`: `DDGS search ...: 7 results` |
+| `web_extract` | working via Keenable's free tier (third party fetches the page) | example.com returned 156 characters |
+| `terminal` tool | working in `hermes-sandbox:desktop-tools` | `docker exec` checks; real Hermes runs |
+| Browser | working inside the sandbox | `browser_navigate` 2.71 s and `browser_snapshot` 0.83 s in the log; Xvnc, xfwm4, xfdesktop running |
+| Domain blocklist | enforced for browser navigation only | `mail.google.com` blocked in 0.06 s; `web_extract` still fetched it |
+| GPUs in the sandbox | 2 visible, survive `daemon-reload` | control container (`--gpus` only) lost them, sandbox kept them |
+| Egress filter | private ranges and metadata blocked, internet and Ollama open | probes inside the real container; survives `docker restart` |
+| Brave search | not configured (deferred by the user) | n/a |
+| Full machine reboot | **not tested** | n/a |
 
-No API key, no account, no cost. Exact diff: [`config-diff.md`](config-diff.md).
+![current state](diagrams/44_current_state_dashboard.svg)
+
+Architecture in one picture: search and extract run on the host; the terminal and the browser run in a hardened
+Docker sandbox on its own network.
+
+![system overview](diagrams/24_system_overview.svg)
+
+## TL;DR setup checklist
+
+| # | What | Where |
+|---|---|---|
+| 1 | `hermes tools post-setup ddgs` (installs `ddgs` into Hermes's managed env, **not** plain pip) | shell |
+| 2 | Remove `web` and `browser` from `agent.disabled_toolsets`; add `web` and `browser` to `platform_toolsets.cli` | `~/.hermes/config.yaml` |
+| 3 | `web.search_backend: ddgs`, `web.extract_backend: keenable` | `config.yaml` |
+| 4 | `browser.backend: 'off'` (stops the Browser Use CLI mode hiding `browser_*`) | `config.yaml` |
+| 5 | Build `hermes-sandbox:desktop-tools` (`sandbox/Dockerfile.*`) and set `terminal.docker_image` | docker + `config.yaml` |
+| 6 | GPU: keep `--gpus=all` and add explicit `--device=/dev/nvidia*` to `terminal.docker_extra_args` | `config.yaml` |
+| 7 | Hardening: `--security-opt=no-new-privileges`, `--pids-limit=512` | `config.yaml` |
+| 8 | Egress: `docker network create hermes-sbx`, install `sandbox/egress/*`, UFW allow 11434 from the subnet, `--network=hermes-sbx` | host + `config.yaml` |
+| 9 | Optional: `security.website_blocklist` | `config.yaml` |
+| 10 | Recreate the sandbox container, then verify with the [runbook](RUNBOOK.md) | shell |
+
+No API key, no account, no cost. Exact diffs: [`config-diff.md`](config-diff.md).
 
 ## The question
 
@@ -144,21 +178,24 @@ the *base* runtime Python succeeds too. Neither proves Hermes can load it. Check
 
 ![sandbox boundary](diagrams/09_sandbox_boundary.svg)
 
-## Limits
+## Limits (final stack)
 
-- **Search only.** `ddgs` provides `web_search`. `web_extract` needs a different backend, so expect it to
-  fail or be unavailable. The agent can still fetch pages with `curl` through the terminal tool.
-- **Rate limits.** DuckDuckGo is accessed through an unofficial scraping library and may throttle heavy use. The 30 s cap keeps
-  the agent loop from hanging.
-- **Restart.** Not needed in practice: the operator confirmed search worked in the running instance. If a session lacks the tool, restart it.
-- **Privacy.** Queries leave the machine to DuckDuckGo, unlike a self-hosted SearXNG.
+- **Extract is third party.** `ddgs` is search only. `web_extract` runs through Keenable's free tier, so the
+  URLs the agent extracts are visible to that service.
+- **Rate limits.** DuckDuckGo is reached through an unofficial scraping library and may throttle heavy use. A 30 s cap keeps
+  the agent loop from hanging, and the free keyless fallback ring covers rate-limit failures.
+- **Blocklist gap.** The domain blocklist is enforced for browser navigation, not for `web_extract`.
+- **Egress blocks the LAN.** The sandbox cannot reach private ranges; add a narrow exception if the agent needs a LAN host.
+- **Privacy.** Search queries leave the machine to DuckDuckGo, unlike a self-hosted SearXNG.
+- **Browser fidelity.** Pages are driven through accessibility snapshots by a local model; see Lessons learned for how
+  the model's own reports misled us.
 
 ## Alternatives
 
 | Backend | Key? | Notes |
 |---|---|---|
-| `ddgs` | none | **chosen**; search only |
-| `brave-free` | `BRAVE_SEARCH_API_KEY` | free signup at brave.com/search/api, about 2k queries/month per the plugin manifest |
+| `ddgs` | none | **chosen**; search only (extract via Keenable) |
+| `brave-free` | `BRAVE_SEARCH_API_KEY` | optional, **deferred by the user**; free signup at brave.com/search/api, about 2k queries/month per the plugin manifest |
 | `searxng` | none (self-host) | most private; needs a SearXNG instance |
 | Exa / Parallel / Firecrawl | API key | keyed vendors with extract support |
 
@@ -168,15 +205,19 @@ Switching is one line: `web.search_backend: brave-free` (plus the key in `~/.her
 
 ## Verification status
 
-Honest accounting:
+Honest accounting (see the evidence matrix for where each claim comes from):
 
 | Check | State |
 |---|---|
-| `DDGS().text()` live query from the managed Python returned results | done |
-| `config.yaml` parses and shows the intended values | done |
-| `hermes tools list` shows `web` enabled | done |
-| Agent performs a real `web_search` end to end | **done**, but see Corrections: until `ddgs` was installed in the right env, queries were served by the keyless rescue ring |
+| Real `ddgs` search through Hermes | done (`DDGS search ...: 7 results` in `agent.log`) |
+| `web_extract` through Keenable | done (example.com content) |
+| Browser navigate + snapshot in the sandbox | done |
+| Browser blocklist enforcement | done (0.06 s block); not enforced for `web_extract` |
+| GPU in sandbox across `daemon-reload` | done (control comparison) |
+| Egress policy and `docker restart` survival | done |
+| Full machine reboot | **not done** |
 
+![evidence matrix](diagrams/48_evidence_matrix.svg)
 ![verification](diagrams/11_verification_flow.svg)
 ![timeline](diagrams/08_rollout_timeline.svg)
 
@@ -186,10 +227,17 @@ Honest accounting:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Agent still says no web search | session predates the edit (not observed here) | restart session and gateway |
-| `ddgs package is not installed` | installed into the wrong Python | pip into the managed runtime |
-| Timeouts or empty results | rate limiting | wait, or switch backend |
-| `web_extract` errors | search-only backend | use `curl`, or add an extract backend |
+| Search "works" but the log says `ddgs package is not installed` | `ddgs` in the wrong Python; keyless rescue is serving | `hermes tools post-setup ddgs` |
+| Timeouts or empty search results | DuckDuckGo rate limiting | wait; fallback ring covers it; or switch backend |
+| Agent has only vault browser tools | Browser Use CLI mode is the default | `browser.backend: 'off'` |
+| `browser_navigate`: Bot Desktop needs Xvnc... | sandbox image lacks the desktop stack | use `hermes-sandbox:desktop-tools`, recreate |
+| NVML Unknown Error in the sandbox | cgroup device rule dropped after a systemd reload | recreate; keep the `--device` flags |
+| Sandbox cannot reach a LAN host | egress policy | narrow allow in `hermes-sandbox-egress.sh` |
+| Agent claims success without evidence | model hallucination | check `agent.log` / `docker exec` |
+
+Full commands: [`RUNBOOK.md`](RUNBOOK.md).
+
+![runbook flow](diagrams/49_runbook_flow.svg)
 
 ## Browser access
 
@@ -451,6 +499,54 @@ Docker, not the model's own report.
 
 ![verification ladder](diagrams/23_verification_ladder.svg)
 
+## Lessons learned
+
+![lessons](diagrams/47_lessons_learned_map.svg)
+
+1. **A fallback can hide a fault.** The keyless rescue ring made search look healthy while `ddgs` was not even loadable.
+   Read the component's own log, not just the outcome.
+2. **Where a package lives matters.** Hermes runs an isolated managed environment; a plain `pip install` elsewhere is invisible.
+3. **Defaults change tool surfaces.** Browser Use CLI mode silently replaced the standard browser tools.
+4. **Sandboxed placement is deliberate.** Hermes puts the browser in the sandbox when the terminal is Docker; the fix is to
+   give the sandbox what it needs, not to move the browser out.
+5. **Reproduce before you blame.** A control container proved the GPU loss came from the cgroup behaviour, not the setup.
+6. **Models mis-report.** One run made zero tool calls and returned invented output; another miscounted its own calls.
+   Verify with logs and `docker exec`.
+7. **Check your own claims.** Several statements in earlier versions of these docs were wrong and were corrected
+   (see the Corrections table).
+
+![config surface](diagrams/50_config_surface_map.svg)
+![risk register](diagrams/51_risk_register.svg)
+
+## Decision log
+
+![decisions](diagrams/46_decision_log.svg)
+
+| Decision | Chosen | Why |
+|---|---|---|
+| Search backend | DuckDuckGo (`ddgs`) | no key, no cost |
+| Brave | deferred by the user | optional; needs a free key |
+| Browser placement | sandboxed desktop image | keeps pages the model chooses inside Docker |
+| Egress control | dedicated network + `DOCKER-USER` chain | scopes the rules to the Hermes sandbox only |
+| Cleanup | approved scope only | keep newest 3 config backups, old Open WebUI and NemoClaw leftovers |
+| Machine reboot test | deferred | user present first; prior boot-hang history on this host |
+
+## Open items
+
+![open items](diagrams/52_open_items_roadmap.svg)
+
+- Full machine reboot test (boot ordering, firewall loading at startup).
+- Optional Brave search (free key from the user).
+- IPv6 egress filtering (the sandbox network has no IPv6).
+- `web_extract` is not covered by the blocklist; pin a local fetcher if that matters.
+
+## Runbook and changelog
+
+- [`RUNBOOK.md`](RUNBOOK.md): verify, recover and roll back, with commands.
+- [`CHANGELOG.md`](CHANGELOG.md): dated list of every change.
+
+![session timeline](diagrams/45_session_timeline_full.svg)
+
 ## Diagram index
 
 All diagrams are Graphviz, dark themed, with `.dot` source, `.png` (160 dpi) and `.svg` in [`diagrams/`](diagrams/).
@@ -501,6 +597,15 @@ Re-render with `./render.sh`.
 | 41 | [Egress before/after](diagrams/41_egress_before_after.png) |
 | 42 | [Egress persistence and rollback](diagrams/42_egress_persistence_rollback.png) |
 | 43 | [browser_console error root cause](diagrams/43_console_error_root_cause.png) |
+| 44 | [Current state dashboard](diagrams/44_current_state_dashboard.png) |
+| 45 | [Full session timeline](diagrams/45_session_timeline_full.png) |
+| 46 | [Decision log](diagrams/46_decision_log.png) |
+| 47 | [Lessons learned map](diagrams/47_lessons_learned_map.png) |
+| 48 | [Evidence matrix](diagrams/48_evidence_matrix.png) |
+| 49 | [Runbook flow](diagrams/49_runbook_flow.png) |
+| 50 | [Config surface map](diagrams/50_config_surface_map.png) |
+| 51 | [Risk register](diagrams/51_risk_register.png) |
+| 52 | [Open items](diagrams/52_open_items_roadmap.png) |
 
 ## Repo layout
 
@@ -510,6 +615,8 @@ Re-render with `./render.sh`.
 README.md        this file
 SESSION.md       working log of the session
 config-diff.md   exact config changes and rollback
+RUNBOOK.md       verify / recover / roll back commands
+CHANGELOG.md     dated list of changes
 sandbox/         Dockerfile.tools, Dockerfile.desktop, egress/ (firewall script + systemd unit)
 render.sh        re-render diagrams and logo
 assets/          logo.svg / logo.png
