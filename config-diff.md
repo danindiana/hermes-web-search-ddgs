@@ -47,3 +47,23 @@ Rollback: copy the backup over `config.yaml` and `pip uninstall ddgs`.
 
 No package install was needed; Chromium and `agent-browser` were already under `~/.hermes/tools/`.
 Rollback: restore the matching `config.yaml.bak-*`.
+
+## Follow-up: sandbox image, GPU flags, hardening
+
+```diff
+ terminal:
+-  docker_image: hermes-sandbox:pdf
++  docker_image: hermes-sandbox:tools
+   docker_extra_args:
+     - --add-host=host.docker.internal:host-gateway
+     - --gpus=all
++    - --device=/dev/nvidia0
++    - --device=/dev/nvidia1
++    - --device=/dev/nvidiactl
++    - --device=/dev/nvidia-uvm
++    - --device=/dev/nvidia-uvm-tools
++    - --security-opt=no-new-privileges
++    - --pids-limit=512
+```
+
+Rollback: restore the matching `config.yaml.bak-*`, remove the container so Hermes recreates it.

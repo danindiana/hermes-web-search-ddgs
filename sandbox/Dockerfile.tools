@@ -1,0 +1,20 @@
+# Extends hermes-sandbox:pdf with a general CLI toolbox baked into the image
+# layer (survives container recreation). Build:
+#   docker build -t hermes-sandbox:tools -f Dockerfile.tools .
+FROM hermes-sandbox:pdf
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    jq \
+    ripgrep \
+    tmux \
+    sqlite3 \
+    zip \
+    rsync \
+    ffmpeg \
+    pandoc \
+    gh \
+    && rm -rf /var/lib/apt/lists/*
+
+USER pn

@@ -41,3 +41,11 @@ Operator independently confirmed web search works in the running instance; no re
 - Smoke test with the driver CLI against https://example.com: open, snapshot, close all OK.
 - Not verified: agent-driven browsing, and whether running sessions need a restart.
 - Docs updated: README browser section, diagrams 13-15, config-diff.md.
+
+## Follow-up: sandbox upgrade (see also session_1791317605)
+- Built `hermes-sandbox:tools` (jq, ripgrep, tmux, sqlite3, zip, rsync, ffmpeg, pandoc, gh).
+- GPU died in the long-running container after systemd reloads; fixed with explicit `--device` flags.
+  Reload-survival untested.
+- Added `no-new-privileges` and `--pids-limit=512`; recreated the container; verified via docker exec.
+- A `hermes chat -q` check hallucinated tool output; discarded.
+- Docs: README "Sandbox upgrade" section, diagrams 16-24, `sandbox/Dockerfile.tools`.

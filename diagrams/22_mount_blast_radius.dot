@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Mounts: what the sandbox can change on the host";
+c [label="sandbox container", color="#bc8cff"];
+subgraph cluster_rw { label="read-write"; color="#f85149"; fontcolor="#f85149"; style=rounded;
+ w [label="hermes-sessions -> /workspace", color="#f85149"]; s [label="~/.hermes/sandbox_ssh -> /home/pn/.ssh", color="#f85149"]; h [label="sandbox home -> /root", color="#f0883e"]; }
+subgraph cluster_ro { label="read-only"; color="#3fb950"; fontcolor="#3fb950"; style=rounded;
+ r [label="~/.hermes/skills\ncaches: documents, images, audio,\nvideos, web, screenshots, spillover\nattachments, composer-pastes", color="#3fb950", fillcolor="#1f2937"]; }
+c->w; c->s; c->h; c->r [color="#3fb950"];
+}

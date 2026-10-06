@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Why the GPU vanished inside the long-running container";
+a [label="Container started\nOct 5 11:15\nnvidia-smi presumed OK\n(not checked then)", color="#3fb950", fillcolor="#1f2937"];
+b [label="systemd reload\n(x2 since start)", color="#d29922", fillcolor="#1f2937"];
+c [label="device cgroup rule from --gpus\nis dropped (systemd cgroup driver, v2)", color="#f85149"];
+d [label="/dev/nvidia* nodes still listed\nbut access denied", color="#f0883e"];
+e [label="nvidia-smi: NVML Unknown Error\ntorch.cuda False", color="#f85149"];
+f [label="Fresh container with --gpus=all\nworks: 2 GPUs, CUDA True", color="#3fb950", fillcolor="#1f2937"];
+a->b->c->d->e; f->c [style=dashed, label="control test:\nsetup itself is fine", constraint=false];
+n [label="Cause is the known systemd-cgroup failure mode,\ninferred from the symptoms + control test", color="#d29922", fillcolor="#1f2937", shape=note]; n->c [style=dotted];
+}

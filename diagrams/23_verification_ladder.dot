@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Verification: model self-report vs ground truth";
+a [label="hermes chat -q (no tools forced)\n0 tool calls", color="#f85149"];
+b [label="Output: 'jq 1.7.1', 'Total GPUs: 1'\nHALLUCINATED, discarded", color="#f85149"];
+c [label="hermes chat -t terminal\n6 tool calls, container created", color="#d29922", fillcolor="#1f2937"];
+d [label="docker exec on new container\nGPUs, CUDA, jq 1.7, rg 14.1.1,\nworkspace write, inspect flags", color="#3fb950", fillcolor="#1f2937"];
+a->b; c->d; b->c [label="retry", style=dashed];
+n [label="Rule: trust docker exec / inspect, not the model's report", color="#d29922", fillcolor="#1f2937", shape=note]; d->n [style=dotted];
+}

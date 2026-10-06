@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Recreating the sandbox container";
+a [label="Edit config.yaml\n(image, extra args)", color="#d29922", fillcolor="#1f2937"];
+b [label="Throwaway docker run\nwith the same flags", color="#58a6ff", fillcolor="#13294d"];
+c [label="docker stop + rm\nhermes-5da4a7d0", color="#f85149"];
+d [label="Hermes: next terminal call\ncreates container from config", color="#bc8cff"];
+e [label="hermes-4e4a23d7\nhermes-sandbox:tools", color="#3fb950", fillcolor="#1f2937"];
+f [label="docker exec checks", color="#3fb950", fillcolor="#1f2937"];
+a->b->c->d->e->f;
+}

@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="GPU fix: make device access part of the container config";
+subgraph cluster_b { label="before"; color="#f85149"; fontcolor="#f85149"; style=rounded;
+ b [label="--gpus=all only", color="#f85149"]; }
+subgraph cluster_a { label="after (terminal.docker_extra_args)"; color="#3fb950"; fontcolor="#3fb950"; style=rounded;
+ a1 [label="--gpus=all", color="#3fb950", fillcolor="#1f2937"]; a2 [label="--device=/dev/nvidia0\n--device=/dev/nvidia1\n--device=/dev/nvidiactl", color="#3fb950", fillcolor="#1f2937"]; a3 [label="--device=/dev/nvidia-uvm\n--device=/dev/nvidia-uvm-tools", color="#3fb950", fillcolor="#1f2937"]; }
+b->a1; a1->a2->a3 [style=invis];
+t [label="Tested: new container sees 2 GPUs, torch CUDA True\nNOT tested: surviving a real systemctl daemon-reload", color="#d29922", fillcolor="#1f2937", shape=note]; a3->t [style=dotted];
+}

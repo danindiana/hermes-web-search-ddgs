@@ -2,7 +2,7 @@
 
 <img src="assets/logo.png" alt="hermes://search logo" width="640">
 
-# Giving Hermes Agent the web: keyless DuckDuckGo search + a local headless browser
+# Giving Hermes Agent the web, plus a sturdier sandbox: DuckDuckGo search, headless browser, tools image, GPU fix
 
 ![status](https://img.shields.io/badge/status-search%20live%20%C2%B7%20browser%20enabled-3fb950?style=for-the-badge)
 ![license](https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge)
@@ -10,13 +10,15 @@
 ![search](https://img.shields.io/badge/search-DuckDuckGo-de5833?style=for-the-badge&logo=duckduckgo&logoColor=white)
 ![api key](https://img.shields.io/badge/API%20key-none%20needed-39c5cf?style=for-the-badge)
 ![browser](https://img.shields.io/badge/browser-headless%20Chromium-58a6ff?style=for-the-badge&logo=googlechrome&logoColor=white)
+![docker](https://img.shields.io/badge/sandbox-Docker-2496ed?style=for-the-badge&logo=docker&logoColor=white)
+![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-15%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-24%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
-config change that fixed it without any paid service or API key, and the follow-up that enabled a local
-headless browser.*
+config change that fixed it without any paid service or API key, the follow-up that enabled a local
+headless browser, and a sandbox upgrade (CLI toolbox image, durable GPU fix, hardening flags).*
 
 </div>
 
@@ -35,8 +37,9 @@ headless browser.*
 10. [Verification status](#verification-status)
 11. [Troubleshooting](#troubleshooting)
 12. [Browser access](#browser-access)
-13. [Diagram index](#diagram-index)
-14. [Repo layout](#repo-layout)
+13. [Sandbox upgrade](#sandbox-upgrade)
+14. [Diagram index](#diagram-index)
+15. [Repo layout](#repo-layout)
 
 ## TL;DR
 
@@ -243,6 +246,90 @@ Avoid level 3 unless there is a specific need. The diagram below is illustrative
 
 ![risk model](diagrams/15_browser_risk_model.svg)
 
+## Sandbox upgrade
+
+Follow-up question: "what else might our hermes agent docker instance need?" A read-only survey of the
+sandbox container (`hermes-5da4a7d0`, image `hermes-sandbox:pdf`) found three things worth fixing.
+
+![system overview](diagrams/24_system_overview.svg)
+
+Web search and the browser tool run on the host; only the `terminal` tool runs in Docker.
+
+### 1. CLI toolbox image
+
+Missing from the image: `jq`, `ripgrep`, `tmux`, `sqlite3`, `zip`, `rsync`, `ffmpeg`, `pandoc`, `gh`.
+They are now baked into a new image layer, [`sandbox/Dockerfile.tools`](sandbox/Dockerfile.tools), so they survive
+container recreation (ad-hoc installs into a running container do not).
+
+```bash
+docker build -t hermes-sandbox:tools -f Dockerfile.tools .   # then terminal.docker_image: hermes-sandbox:tools
+```
+
+`libreoffice` and `chromium` were skipped on purpose, since the browser tool runs on the host.
+
+![image layers](diagrams/16_sandbox_image_layers.svg)
+![tool inventory](diagrams/17_tools_inventory.svg)
+
+### 2. GPU silently dead inside the long-running container
+
+Symptom: `nvidia-smi` printed `Failed to initialize NVML: Unknown Error` and `torch.cuda.is_available()` was
+`False`, although `--gpus=all` was configured and `/dev/nvidia*` nodes existed. A **fresh** container with
+`--gpus=all` worked (2 GPUs, CUDA True), so the host setup was fine. Docker here uses the systemd cgroup driver
+(cgroup v2) and two systemd reloads had happened since the container started, which is the known way to lose
+device access. The cause is inferred from the symptoms and that control test, not from a trace.
+
+![gpu root cause](diagrams/18_gpu_failure_root_cause.svg)
+
+Fix: keep `--gpus=all` and also pass explicit device flags so the access is part of the container's own config:
+
+```yaml
+terminal:
+  docker_extra_args:
+    - --gpus=all
+    - --device=/dev/nvidia0
+    - --device=/dev/nvidia1
+    - --device=/dev/nvidiactl
+    - --device=/dev/nvidia-uvm
+    - --device=/dev/nvidia-uvm-tools
+```
+
+![gpu fix](diagrams/19_gpu_fix_flags.svg)
+
+**Caveat:** a new container passes with these flags, but surviving a real `systemctl daemon-reload` was **not**
+tested (no sudo in the session). If the GPU dies again, recreate the container.
+
+### 3. Hardening
+
+| Control | State |
+|---|---|
+| cap-drop ALL, non-root uid 1000, 4 GB / 2 CPU | already on |
+| `--security-opt=no-new-privileges` | **added** (Hermes also sets it, so it appears twice; harmless) |
+| `--pids-limit=512` | **added** |
+| network egress | left open (web and curl are wanted) |
+| rw mounts of `/workspace` and `sandbox_ssh` | left as is: this is the real blast radius |
+| writable rootfs, runc runtime | left as is |
+
+![hardening](diagrams/21_hardening_matrix.svg)
+![mounts](diagrams/22_mount_blast_radius.svg)
+
+### Applying it: recreating the container
+
+The old container was stopped and removed; Hermes recreated it from config on its next terminal call.
+Everything was dry-run first with a throwaway `docker run` using the same flags.
+
+![recreation](diagrams/20_container_recreation_flow.svg)
+
+### Verification, and a warning about self-reports
+
+Checked with `docker exec` and `docker inspect` on the new container: both GPUs listed, torch CUDA True,
+`jq 1.7`, `ripgrep 14.1.1`, `/workspace` writable, PidsLimit 512, no-new-privileges set, 5 device nodes.
+
+A first check through `hermes chat -q` made **zero tool calls** and returned invented output (for example
+`jq 1.7.1` and `Total GPUs: 1`). It was discarded. A retry with `-t terminal` made real calls. Verify with
+Docker, not the model's own report.
+
+![verification ladder](diagrams/23_verification_ladder.svg)
+
 ## Diagram index
 
 All diagrams are Graphviz, dark themed, with `.dot` source, `.png` (160 dpi) and `.svg` in [`diagrams/`](diagrams/).
@@ -265,6 +352,15 @@ Re-render with `./render.sh`.
 | 13 | [Browser access levels](diagrams/13_browser_access_levels.png) |
 | 14 | [Browser stack](diagrams/14_browser_stack.png) |
 | 15 | [Browser risk model](diagrams/15_browser_risk_model.png) |
+| 16 | [Sandbox image layers](diagrams/16_sandbox_image_layers.png) |
+| 17 | [Tool inventory](diagrams/17_tools_inventory.png) |
+| 18 | [GPU failure root cause](diagrams/18_gpu_failure_root_cause.png) |
+| 19 | [GPU fix flags](diagrams/19_gpu_fix_flags.png) |
+| 20 | [Container recreation flow](diagrams/20_container_recreation_flow.png) |
+| 21 | [Hardening matrix](diagrams/21_hardening_matrix.png) |
+| 22 | [Mount blast radius](diagrams/22_mount_blast_radius.png) |
+| 23 | [Verification ladder](diagrams/23_verification_ladder.png) |
+| 24 | [System overview](diagrams/24_system_overview.png) |
 
 ## Repo layout
 
@@ -274,6 +370,7 @@ Re-render with `./render.sh`.
 README.md        this file
 SESSION.md       working log of the session
 config-diff.md   exact config changes and rollback
+sandbox/         Dockerfile.tools (toolbox image)
 render.sh        re-render diagrams and logo
 assets/          logo.svg / logo.png
 diagrams/        *.dot *.png *.svg

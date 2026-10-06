@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Whole system: what runs on the host vs in Docker";
+subgraph cluster_h { label="Host (calisota)"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
+ ag [label="Hermes agent + gateway", color="#58a6ff", fillcolor="#13294d"]; ws [label="web_search\nddgs -> DuckDuckGo", color="#3fb950", fillcolor="#1f2937"]; br [label="browser tool\nagent-browser + headless Chromium", color="#3fb950", fillcolor="#1f2937"]; ol [label="Ollama models", color="#bc8cff"]; }
+subgraph cluster_d { label="Docker: hermes-sandbox:tools"; color="#bc8cff"; fontcolor="#bc8cff"; style="rounded,dashed";
+ tm [label="terminal tool\nCLI toolbox, torch + 2 GPUs", color="#39c5cf", fillcolor="#0d2e2e"]; }
+net [label="Internet", color="#d29922", fillcolor="#1f2937"];
+ag->ol; ag->ws; ag->br; ag->tm; ws->net; br->net; tm->net;
+n [label="search + browser are NOT sandboxed; only terminal is", color="#f85149", shape=note]; n->br [style=dotted];
+}
