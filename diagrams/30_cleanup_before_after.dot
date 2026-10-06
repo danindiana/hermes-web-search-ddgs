@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Cleanup: before vs after (approved scope only)";
+subgraph cluster_b { label="BEFORE"; color="#f85149"; fontcolor="#f85149"; style=rounded;
+ b1 [label="config.yaml backups: 14", color="#f85149"]; b2 [label="containers: 9\n(4 exited)", color="#f85149"]; b3 [label="docker images: 40.8 GB\n17 images", color="#f85149"]; }
+subgraph cluster_a { label="AFTER"; color="#3fb950"; fontcolor="#3fb950"; style=rounded;
+ a1 [label="newest 3 backups kept", color="#3fb950", fillcolor="#1f2937"]; a2 [label="containers: 5, all running", color="#3fb950", fillcolor="#1f2937"]; a3 [label="images: 31.3 GB, 15 images\n(Open WebUI v0.11.4 untouched, HTTPS 200)", color="#3fb950", fillcolor="#1f2937"]; }
+b1->a1; b2->a2; b3->a3;
+n [label="Side effect: older rollback backups (e.g. the pre-search config) no longer exist", color="#d29922", fillcolor="#1f2937", shape=note];
+a1->n [style=dotted];
+}

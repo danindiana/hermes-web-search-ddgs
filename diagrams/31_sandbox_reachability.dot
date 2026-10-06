@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="What the sandbox can reach today (measured with /dev/tcp)";
+sb [label="sandbox container\n(default bridge)", color="#bc8cff"];
+inet [label="Internet\npypi.org 200, github.com 200", color="#d29922", fillcolor="#1f2937"];
+lan [label="LAN gateway\nports 80 + 443 open", color="#f85149"];
+ol [label="host Ollama 11434\nopen", color="#f0883e"];
+tk [label="host Tika 9998 + Meilisearch 7700\nopen", color="#f0883e"];
+ssh [label="host SSH 22\nclosed (UFW: LAN CIDR only)", color="#3fb950", fillcolor="#1f2937"];
+fw [label="DOCKER-USER chain: empty\nno egress filtering", color="#f85149", shape=note];
+sb->inet; sb->lan; sb->ol; sb->tk; sb->ssh [style=dashed]; fw->sb [style=dotted];
+}

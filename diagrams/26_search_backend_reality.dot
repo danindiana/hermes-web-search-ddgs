@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Search backend: what was really serving queries";
+a [label="config: web.search_backend = ddgs", color="#58a6ff", fillcolor="#13294d"];
+b [label="ddgs not importable in Hermes's env", color="#f85149"];
+c [label="one-shot keyless rescue\n(Exa / Parallel / Keenable free tier)", color="#d29922", fillcolor="#1f2937"];
+d [label="searches 'worked' - masking the fault", color="#f0883e"];
+e [label="hermes tools post-setup ddgs", color="#3fb950", fillcolor="#1f2937"];
+f [label="DDGS search: 7 results (log-verified)", color="#3fb950", fillcolor="#1f2937"];
+a->b->c->d; d->e [label="found via agent.log"]; e->f;
+}

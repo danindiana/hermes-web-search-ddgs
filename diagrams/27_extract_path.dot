@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="web_extract path after pinning the backend";
+a [label="web_extract(url)", color="#58a6ff", fillcolor="#13294d"];
+b [label="web.extract_backend: keenable (pinned)", color="#3fb950", fillcolor="#1f2937"];
+c [label="Keenable keyless extract\n(third party fetches the page)", color="#d29922", fillcolor="#1f2937"];
+d [label="content returned\nexample.com: 156 chars", color="#3fb950", fillcolor="#1f2937"];
+r [label="Before pin: ddgs tried first, failed,\none-shot rescue chose keenable anyway", color="#f0883e", shape=note];
+a->b->c->d; r->b [style=dotted];
+}

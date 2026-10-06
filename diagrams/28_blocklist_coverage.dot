@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Domain blocklist: where it is enforced (tested vs untested)";
+rankdir=TB;
+cfg [label="security.website_blocklist\nenabled, 8 rules (webmail, accounts, payments)", color="#58a6ff", fillcolor="#13294d"];
+m [label="Matcher check_website_access()\nmail.google.com BLOCKED, paypal BLOCKED,\nexample.com allowed", color="#3fb950", fillcolor="#1f2937"];
+bn [label="browser navigation\nchecks policy (code path present)\nlive test blocked: browser cannot start", color="#d29922", fillcolor="#1f2937"];
+we [label="web_extract (third-party fetch)\nNOT blocked: mail.google.com landing\npage was fetched", color="#f85149"];
+us [label="url_safety (always on)\nprivate IPs + cloud metadata", color="#3fb950", fillcolor="#1f2937"];
+cfg->m; cfg->bn; cfg->we; us->bn [style=dotted]; us->we [style=dotted];
+}

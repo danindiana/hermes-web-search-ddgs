@@ -22,11 +22,11 @@ DuckDuckGo needs no API key and `~/.hermes/.env` was not touched.
 +  search_backend: ddgs
 ```
 
-Package installed into Hermes's managed Python (not the repo `venv/`):
+Package install (CORRECTED): the first attempt used `pip` against the base runtime Python, which Hermes does
+not load. The working command is:
 
 ```bash
-~/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3 -m pip install "ddgs==9.16.0"
-# pulled in: primp-2.0.1, lxml-6.1.3, click-8.5.0
+hermes tools post-setup ddgs   # installs the ddgs extra into Hermes's managed env
 ```
 
 Rollback: copy the backup over `config.yaml` and `pip uninstall ddgs`.
@@ -67,3 +67,21 @@ Rollback: restore the matching `config.yaml.bak-*`.
 ```
 
 Rollback: restore the matching `config.yaml.bak-*`, remove the container so Hermes recreates it.
+
+## Later changes (end-to-end testing)
+
+```diff
+ web:
+   search_backend: ddgs
++  extract_backend: keenable
+ browser:
++  backend: 'off'
+   inactivity_timeout: 120
++security:
++  website_blocklist:
++    enabled: true
++    domains: [accounts.google.com, mail.google.com, outlook.live.com, login.live.com,
++              login.microsoftonline.com, appleid.apple.com, paypal.com, "*.paypal.com"]
+```
+
+Only the newest 3 `config.yaml.bak-*` files remain, so rollback is limited to recent states.

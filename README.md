@@ -4,7 +4,7 @@
 
 # Giving Hermes Agent the web, plus a sturdier sandbox: DuckDuckGo search, headless browser, tools image, GPU fix
 
-![status](https://img.shields.io/badge/status-search%20live%20%C2%B7%20browser%20enabled-3fb950?style=for-the-badge)
+![status](https://img.shields.io/badge/status-search%20%26%20extract%20live%20%C2%B7%20browser%20pending-d29922?style=for-the-badge)
 ![license](https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge)
 ![hermes](https://img.shields.io/badge/Hermes%20Agent-local-58a6ff?style=for-the-badge)
 ![search](https://img.shields.io/badge/search-DuckDuckGo-de5833?style=for-the-badge&logo=duckduckgo&logoColor=white)
@@ -14,7 +14,7 @@
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-25%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-34%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
 config change that fixed it without any paid service or API key, the follow-up that enabled a local
@@ -37,15 +37,16 @@ headless browser, and a sandbox upgrade (CLI toolbox image, durable GPU fix, har
 10. [Verification status](#verification-status)
 11. [Troubleshooting](#troubleshooting)
 12. [Browser access](#browser-access)
-13. [Sandbox upgrade](#sandbox-upgrade)
-14. [Diagram index](#diagram-index)
-15. [Repo layout](#repo-layout)
+13. [Corrections and follow-up findings](#corrections-and-follow-up-findings)
+14. [Sandbox upgrade](#sandbox-upgrade)
+15. [Diagram index](#diagram-index)
+16. [Repo layout](#repo-layout)
 
 ## TL;DR
 
 | Step | What | Where |
 |---|---|---|
-| 1 | `pip install "ddgs==9.16.0"` | Hermes's **managed** Python 3.14.7 |
+| 1 | `hermes tools post-setup ddgs` | installs `ddgs` into Hermes's **managed env** (see [corrections](#corrections-and-follow-up-findings)) |
 | 2 | Remove `web` (and `search`) from `agent.disabled_toolsets` | `~/.hermes/config.yaml` |
 | 3 | Add `web` to `platform_toolsets.cli` | `~/.hermes/config.yaml` |
 | 4 | Set `web.search_backend: ddgs` | `~/.hermes/config.yaml` |
@@ -84,8 +85,9 @@ so adding `web` to the CLI toolsets alone would not have been enough.
 Two changes: one package, one config edit.
 
 ```bash
-# 1. install into the Python Hermes actually runs (see Gotchas)
-~/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3 -m pip install "ddgs==9.16.0"
+# 1. install ddgs into the env Hermes actually loads (see Gotchas and Corrections)
+hermes tools post-setup ddgs
+# NOT: pip install into the base runtime python - Hermes cannot see it (found the hard way)
 
 # 2. back up, then edit config
 cp ~/.hermes/config.yaml ~/.hermes/config.yaml.bak-$(date +%s)
@@ -125,17 +127,20 @@ makes a thread-pool timeout impossible to enforce and can freeze Ctrl+C. The par
 
 ## Gotchas
 
-**Install into the right Python.** The `hermes` launcher resolves to a managed runtime under
-`~/.hermes/tools/python-3.14.7+.../`. The repo's `venv/` directory is not what runs.
+**Install into the right environment.** The `hermes` launcher runs the managed runtime Python in isolated
+mode (`-I`), and `hermes_bootstrap` prepends a generation venv under `~/.hermes/installs/<id>/environments/<id>/venv`.
+Packages must live there. `hermes tools post-setup ddgs` does that; a plain `pip install` into the base runtime
+Python is invisible to Hermes. This repo's first version of these docs got this wrong (see Corrections).
 
 ![python env](diagrams/06_python_env_gotcha.svg)
 
-**A false positive while checking.** Running `import ddgs` from inside `hermes-agent/plugins/web/` appeared to
-succeed, because the plugin directory named `ddgs/` is importable as a namespace package from that cwd. Always
-test imports from a neutral directory such as `/tmp`.
+**False positives while checking.** `import ddgs` from inside `hermes-agent/plugins/web/` appears to succeed,
+because the plugin directory named `ddgs/` is importable as a namespace package from that cwd, and an import from
+the *base* runtime Python succeeds too. Neither proves Hermes can load it. Check Hermes's own log for
+`Web search via ddgs` followed by `DDGS search ...: N results`.
 
-**Searching vs. the sandbox.** Web search runs on the host side of the agent. The Docker sandbox
-(`terminal.backend: docker`) is a separate boundary used by the `terminal` tool.
+**Searching vs. the sandbox.** Web search and extract run on the host side of the agent. The Docker sandbox
+(`terminal.backend: docker`) hosts the `terminal` tool and, by Hermes's design, the browser too (see Browser access).
 
 ![sandbox boundary](diagrams/09_sandbox_boundary.svg)
 
@@ -170,7 +175,7 @@ Honest accounting:
 | `DDGS().text()` live query from the managed Python returned results | done |
 | `config.yaml` parses and shows the intended values | done |
 | `hermes tools list` shows `web` enabled | done |
-| Agent performs a real `web_search` end to end | **done**, confirmed independently by the operator; no reload was needed |
+| Agent performs a real `web_search` end to end | **done**, but see Corrections: until `ddgs` was installed in the right env, queries were served by the keyless rescue ring |
 
 ![verification](diagrams/11_verification_flow.svg)
 ![timeline](diagrams/08_rollout_timeline.svg)
@@ -188,63 +193,98 @@ Honest accounting:
 
 ## Browser access
 
-Follow-up request: "how can we give our hermes agent instance full browser access?"
+**Status: enabled in config, not yet working.** See the Corrections section; the original text of this section
+claimed a host-side headless browser, which turned out to be wrong for this setup.
 
-Hermes already had a local browser installed (`~/.hermes/tools/chromium-1208`, driven by the
-`agent-browser` 0.26.0 Node CLI under `~/.hermes/tools/agent-browser-0.26.0-linux-x64`). The `browser`
-toolset was simply disabled. Four levels of access exist:
+What exists: Chromium (`~/.hermes/tools/chromium-1208`) and the `agent-browser` 0.26.0 CLI under `~/.hermes/tools/`.
+The CLI smoke test (open https://example.com, snapshot, close) passed headless, outside Hermes's agent loop.
+
+Four access levels exist (local, CDP attach, real profile, cloud):
 
 ![access levels](diagrams/13_browser_access_levels.svg)
 
-| Level | Mechanism | Risk |
-|---|---|---|
-| **1. Local headless Chromium (chosen)** | enable the `browser` toolset; fresh empty profile | low |
-| 2. Attach via CDP | `browser.cdp_url: http://127.0.0.1:9222`, Chrome started with `--remote-debugging-port=9222` | medium |
-| 3. Real profile | `browser.use_real_profile` (consent-gated) exposes cookies and logins | high |
-| 4. Cloud browser | Browserbase / Browser Use / Firecrawl, API key and cost | n/a |
-
-### Change made (level 1)
-
-```yaml
-agent:
-  disabled_toolsets:      # 'browser' removed from this list
-platform_toolsets:
-  cli:
-    - file
-    - web
-    - browser             # added
-    - skills
-    - terminal
-    - vision
-```
-
-`hermes tools list` then reports `browser  Browser Automation` as enabled.
+What changed in config: `browser` removed from `agent.disabled_toolsets`, added to `platform_toolsets.cli`, and
+`browser.backend: 'off'` set (see below).
 
 ![browser stack](diagrams/14_browser_stack.svg)
 
-### Smoke test
+### Why it does not run yet
 
-Run directly against the bundled driver, outside Hermes's agent loop:
+1. **Default mode hides the tools.** With `browser.backend` unset, Hermes uses Browser Use CLI mode whenever its
+   harness is importable: the standard `browser_*` tools are replaced by a single `browser_exec`, and the agent
+   saw only vault tools. `browser.backend: 'off'` restores the standard tools (fixed).
+2. **The browser is placed inside the Docker sandbox by design.** `bot_desktop.placement: auto` follows
+   `terminal.backend: docker`. `browser_navigate` fails with: *Bot Desktop needs Xvnc, xfwm4, xfce4-panel,
+   xfdesktop, xfsettingsd, dbus-run-session, xauth, xdpyinfo, xprop inside the terminal backend's sandbox.*
+   `hermes-sandbox:tools` has none of that. Upstream's default image `nousresearch/hermes-sandbox:desktop` carries it.
 
-```bash
-export AGENT_BROWSER_EXECUTABLE_PATH=~/.hermes/tools/chromium-1208/chrome-linux64/chrome
-agent-browser-linux-x64 --session smoke open https://example.com   # prints the page title
-agent-browser-linux-x64 --session smoke snapshot                   # accessibility tree
-agent-browser-linux-x64 --session smoke close
-```
+![browser decision](diagrams/29_browser_mode_decision.svg)
 
-It opened the page, returned a snapshot and closed cleanly. **Not yet verified:** the agent itself driving
-the browser through its `browser_*` tools, and whether an already-running session picks up the toolset
-without a restart.
-
-### Risk model
-
-The browser runs on the host, not inside the Docker sandbox, and a local model reading arbitrary pages can be
-prompt-injected. Level 1 keeps this small: an empty profile means no cookies or logins to steal. The
-driver environment is credential-scrubbed (cloud keys are only passed through when a cloud backend is used).
-Avoid level 3 unless there is a specific need. The diagram below is illustrative, not a threat model.
+Options (not applied, your call): **A** build a sandboxed desktop image (keeps page content inside Docker;
+recommended), **B** `bot_desktop.placement: gateway` (browser runs on the host outside the sandbox, and the host
+also lacks Xvnc), **C** leave the browser off and rely on search + extract.
 
 ![risk model](diagrams/15_browser_risk_model.svg)
+
+## Corrections and follow-up findings
+
+Honest list of what earlier versions of these docs got wrong, found while testing end to end:
+
+| Earlier claim | Reality |
+|---|---|
+| `ddgs` installed into the managed Python and working | Installed into the *base* runtime Python, which Hermes does not load. Hermes logged `ddgs package is not installed` and the keyless rescue ring silently served the searches, so they "worked". Fixed with `hermes tools post-setup ddgs`; log now shows `DDGS search ...: 7 results`. The stray base-Python install was removed. |
+| Browser runs on the host, outside the sandbox | With `terminal.backend: docker`, Hermes places the browser inside the sandbox (`placement: auto`) and refuses to run it elsewhere implicitly. |
+| Browser toolset enabled = browser available | Needed `browser.backend: 'off'`, and the sandbox still lacks the desktop stack. |
+| "No sudo available" (sandbox GPU section) | Passwordless sudo works; already corrected earlier. |
+
+![search reality](diagrams/26_search_backend_reality.svg)
+
+### Extract backend
+
+`web_extract` was failing over to a one-shot rescue on every call. Pinned `web.extract_backend: keenable`
+(keyless free tier; the page URL is fetched by a third party). Verified: example.com returned 156 characters of content.
+
+![extract path](diagrams/27_extract_path.svg)
+
+### Domain blocklist
+
+Added `security.website_blocklist` (enabled, 8 rules: Google accounts/mail, Microsoft login/outlook, Apple ID,
+PayPal). The matcher blocks them and allows others. **Coverage is partial:** the browser's navigation path calls the
+policy (code present, live test blocked because the browser cannot start), but `web_extract` via the third-party
+fetcher did **not** block `mail.google.com` (it returned the public landing page). Private IPs and cloud-metadata
+hosts are always blocked by `url_safety` regardless.
+
+![blocklist coverage](diagrams/28_blocklist_coverage.svg)
+
+### Search fallback
+
+`web.keyless_fallback` and `web.keyless_rescue` default to on, so a DuckDuckGo rate limit falls to the keyless
+ring. Brave remains optional: it needs a free key from brave.com/search/api, which I cannot create; set
+`web.search_backend: brave-free` and `BRAVE_SEARCH_API_KEY` in `~/.hermes/.env` if wanted.
+
+### Cleanup (approved scope)
+
+Kept the newest 3 of 14 config backups, removed 3 old Open WebUI containers and 1 exited NemoClaw container, and
+removed the Open WebUI v0.7.2 and v0.11.3 images. Docker images went from 40.8 GB to 31.3 GB; the five running
+containers and Open WebUI v0.11.4 (HTTPS 200) were unaffected. Side effect: older rollback backups are gone.
+
+![cleanup](diagrams/30_cleanup_before_after.svg)
+
+### Sandbox egress review (nothing changed)
+
+Measured from inside the sandbox: internet reachable (pypi, github), the LAN gateway's web ports reachable, and host
+Ollama (11434), Tika (9998) and Meilisearch (7700) reachable through the `docker0` UFW allows; host SSH is closed.
+The `DOCKER-USER` chain is empty. Recommendation: **A** add `DOCKER-USER` rules that block private ranges and metadata
+while allowing DNS, the internet and host Ollama (reversible; test the agent's real needs first). Proxy allowlisting
+is heavier; leaving it open is the status quo.
+
+![reachability](diagrams/31_sandbox_reachability.svg)
+![egress options](diagrams/32_egress_options.svg)
+
+### Test ladder and capability map
+
+![test ladder](diagrams/33_followup_test_ladder.svg)
+![capability map](diagrams/34_capability_map.svg)
 
 ## Sandbox upgrade
 
@@ -366,6 +406,15 @@ Re-render with `./render.sh`.
 | 23 | [Verification ladder](diagrams/23_verification_ladder.png) |
 | 24 | [System overview](diagrams/24_system_overview.png) |
 | 25 | [Daemon-reload test](diagrams/25_reload_test.png) |
+| 26 | [Search backend reality](diagrams/26_search_backend_reality.png) |
+| 27 | [Extract path](diagrams/27_extract_path.png) |
+| 28 | [Blocklist coverage](diagrams/28_blocklist_coverage.png) |
+| 29 | [Browser mode decision](diagrams/29_browser_mode_decision.png) |
+| 30 | [Cleanup before/after](diagrams/30_cleanup_before_after.png) |
+| 31 | [Sandbox reachability](diagrams/31_sandbox_reachability.png) |
+| 32 | [Egress options](diagrams/32_egress_options.png) |
+| 33 | [Follow-up test ladder](diagrams/33_followup_test_ladder.png) |
+| 34 | [Capability map](diagrams/34_capability_map.png) |
 
 ## Repo layout
 

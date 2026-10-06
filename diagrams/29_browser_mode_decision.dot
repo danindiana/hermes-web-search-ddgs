@@ -1,0 +1,15 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Why the browser tool does not work yet, and the options";
+rankdir=TB;
+s [label="browser toolset enabled", color="#58a6ff", fillcolor="#13294d"];
+d1 [label="Default: Browser Use CLI mode\nreplaces browser_* with browser_exec\n(tools hidden)", color="#f85149"];
+f1 [label="FIXED: browser.backend: 'off'\nstandard browser_* tools visible", color="#3fb950", fillcolor="#1f2937"];
+d2 [label="browser_navigate: 'Bot Desktop needs Xvnc,\nxfwm4, xfce4-panel... inside the sandbox'", color="#f85149"];
+oa [label="A. Sandboxed desktop image\nbuild from :tools + Xvnc/Xfce/Chromium\nkeeps pages inside Docker (recommended)", color="#3fb950", fillcolor="#1f2937"];
+ob [label="B. placement: gateway\nbrowser on host, outside sandbox\nalso needs Xvnc on host (not installed)", color="#d29922", fillcolor="#1f2937"];
+oc [label="C. Leave browser off,\nuse web_search + web_extract", color="#39c5cf", fillcolor="#0d2e2e"];
+s->d1->f1->d2; d2->oa; d2->ob; d2->oc;
+}

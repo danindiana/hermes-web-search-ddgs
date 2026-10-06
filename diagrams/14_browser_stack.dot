@@ -2,13 +2,10 @@ digraph g {
 graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
 node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
 edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
-label="Local browser stack (verified pieces on disk)";
-a [label="Hermes agent\nbrowser_* tools", color="#58a6ff", fillcolor="#13294d"];
-t [label="tools/browser_tool.py\ncredential-scrubbed env", color="#58a6ff", fillcolor="#13294d"];
-c [label="agent-browser 0.26.0\n(Node CLI driver)", color="#bc8cff"];
-x [label="chromium-1208\nchrome-linux64 (headless)", color="#3fb950", fillcolor="#1f2937"];
-w [label="the web", color="#d29922", fillcolor="#1f2937"];
-s [label="per-task session\naccessibility snapshot with @eN refs", color="#39c5cf", fillcolor="#0d2e2e"];
-a->t->c->x->w; x->s [label="snapshot"]; s->a;
-n [label="Cloud keys are stripped from the driver env\nunless a cloud backend is selected", color="#f85149", shape=note]; n->c [style=dotted];
+label="Browser stack: what Hermes expects vs what exists";
+a [label="Hermes browser_* tools\n(needs browser.backend: 'off')", color="#58a6ff", fillcolor="#13294d"];
+p [label="bot_desktop.placement: auto\nfollows terminal.backend = docker", color="#bc8cff"];
+s [label="Sandbox must run: Xvnc, xfwm4, xfce4-panel,\nxfdesktop, xfsettingsd, dbus, xauth, xdpyinfo, xprop\n+ agent-browser + Chromium", color="#f85149"];
+h [label="Host has agent-browser 0.26.0 + chromium-1208\n(CLI smoke test passed headless)\nbut Hermes does not route there", color="#d29922", fillcolor="#1f2937"];
+a->p->s; h->p [style=dotted, label="not used"];
 }

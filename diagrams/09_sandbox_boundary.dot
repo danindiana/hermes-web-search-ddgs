@@ -2,11 +2,11 @@ digraph g {
 graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
 node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
 edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
-label="Where search runs vs where the shell tool runs";
+label="Where each tool runs (corrected for terminal.backend: docker)";
 subgraph cluster_h { label="Host (calisota)"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
- ag [label="Hermes agent process", color="#58a6ff", fillcolor="#13294d"]; ws [label="web_search -> ddgs\n(host network)", color="#3fb950", fillcolor="#1f2937"]; }
-subgraph cluster_d { label="Docker sandbox hermes-sandbox:pdf"; color="#bc8cff"; fontcolor="#bc8cff"; style="rounded,dashed";
- tm [label="terminal tool\ncurl, scripts", color="#39c5cf", fillcolor="#0d2e2e"]; }
+ ag [label="Hermes agent process", color="#58a6ff", fillcolor="#13294d"]; ws [label="web_search -> ddgs\nweb_extract -> keenable (third party)", color="#3fb950", fillcolor="#1f2937"]; }
+subgraph cluster_d { label="Docker sandbox hermes-sandbox:tools"; color="#bc8cff"; fontcolor="#bc8cff"; style="rounded,dashed";
+ tm [label="terminal tool", color="#39c5cf", fillcolor="#0d2e2e"]; br [label="browser tool (placement: auto)\nneeds Xvnc + Xfce desktop stack\nNOT in the image yet", color="#f85149"]; }
 net [label="Internet", color="#d29922", fillcolor="#1f2937"];
-ag->ws; ws->net; ag->tm; tm->net [style=dashed, label="possible, not a search tool"];
+ag->ws; ws->net; ag->tm; ag->br [style=dashed, label="routed here by design"]; tm->net; br->net [style=dashed];
 }

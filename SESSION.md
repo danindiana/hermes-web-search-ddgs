@@ -55,3 +55,14 @@ Earlier docs said sudo was unavailable; that was wrong (passwordless `sudo -n` w
 (`--gpus=all` + explicit `--device`) and a control (`--gpus=all` only) both showed 2 GPUs; after one
 `sudo systemctl daemon-reload` the sandbox kept both GPUs and torch CUDA True, the control failed with
 NVML Unknown Error. Control container removed. Single observation.
+
+## Follow-up testing: corrections found (2026-10-06)
+- E2E run through Hermes showed `web_search backend 'ddgs' failed (ddgs package is not installed)` then keyless rescue:
+  my earlier pip install went into the base runtime python, not Hermes's managed env. Fixed via
+  `hermes tools post-setup ddgs`; log confirms real DDGS results. Stray base install removed.
+- `web.extract_backend: keenable` pinned; extract verified on example.com.
+- Browser: default Browser Use CLI mode hid browser_* tools -> `browser.backend: 'off'`. Then browser_navigate fails:
+  the browser is placed in the Docker sandbox (placement auto) and the image lacks the Xvnc/Xfce desktop stack. The
+  earlier "browser runs on the host" claim was wrong. Decision pending (A sandboxed desktop image / B gateway / C off).
+- Domain blocklist added; matcher verified; NOT enforced by web_extract (third-party fetch); browser path untestable now.
+- Cleanup done within approved scope; Open WebUI healthy. Egress reviewed only (DOCKER-USER empty; LAN + host services reachable).
