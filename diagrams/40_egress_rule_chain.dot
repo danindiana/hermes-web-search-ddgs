@@ -1,0 +1,11 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="The rule chain (HERMES-SBX-EGRESS)";
+a [label="packet from 172.30.0.0/24\nenters DOCKER-USER", color="#58a6ff", fillcolor="#13294d"];
+r1 [label="dst 10.0.0.0/8", color="#f85149"]; r2 [label="dst 172.16.0.0/12\n(other containers)", color="#f85149"]; r3 [label="dst 192.168.0.0/16\n(LAN)", color="#f85149"]; r4 [label="dst 169.254.0.0/16\n(cloud metadata)", color="#f85149"]; r5 [label="dst 100.64.0.0/10\n(CGNAT)", color="#f85149"];
+rej [label="REJECT", color="#f85149"];
+ret [label="RETURN -> normal Docker forwarding\n(internet)", color="#3fb950", fillcolor="#1f2937"];
+a->r1->r2->r3->r4->r5 [label="no match"]; r1->rej; r2->rej; r3->rej; r4->rej; r5->rej; r5->ret [label="no match"];
+}

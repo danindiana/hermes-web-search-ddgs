@@ -14,7 +14,7 @@
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-38%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-42%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
 config change that fixed it without any paid service or API key, the follow-up that enabled a local
@@ -296,15 +296,39 @@ containers and Open WebUI v0.11.4 (HTTPS 200) were unaffected. Side effect: olde
 
 ![cleanup](diagrams/30_cleanup_before_after.svg)
 
-### Sandbox egress review (nothing changed)
+### Sandbox egress policy (applied)
 
-Measured from inside the sandbox: internet reachable (pypi, github), the LAN gateway's web ports reachable, and host
-Ollama (11434), Tika (9998) and Meilisearch (7700) reachable through the `docker0` UFW allows; host SSH is closed.
-The `DOCKER-USER` chain is empty. Recommendation: **A** add `DOCKER-USER` rules that block private ranges and metadata
-while allowing DNS, the internet and host Ollama (reversible; test the agent's real needs first). Proxy allowlisting
-is heavier; leaving it open is the status quo.
+Measured before the change, from inside the sandbox: internet reachable, the LAN gateway's web ports reachable, host
+Ollama, Tika and Meilisearch reachable, cloud-metadata address not blocked, and the `DOCKER-USER` chain empty.
 
-![reachability](diagrams/31_sandbox_reachability.svg)
+![reachability before](diagrams/31_sandbox_reachability.svg)
+
+**Design:** the sandbox shares Docker's default bridge with Agent Zero, so a rule on that bridge would hit both.
+Instead the sandbox moved to its own network, `hermes-sbx` (172.30.0.0/24), and the rules match only that subnet:
+
+![topology](diagrams/39_egress_network_topology.svg)
+
+- `sandbox/egress/hermes-sandbox-egress.sh` creates a `HERMES-SBX-EGRESS` chain that REJECTs destinations in
+  10/8, 172.16/12 (other containers), 192.168/16 (LAN), 169.254/16 (cloud metadata) and 100.64/10, then RETURNs, so
+  the internet stays open. `DOCKER-USER` jumps to it for `-s 172.30.0.0/24`.
+- `sandbox/egress/hermes-sandbox-egress.service` runs it at boot (after, and part of, `docker.service`).
+- One UFW rule allows host Ollama from that subnet only (`11434/tcp`). Tika and Meilisearch are closed to the
+  sandbox because their allows were on `docker0`, which the new network does not use.
+- Config: `--network=hermes-sbx` added to `terminal.docker_extra_args`, then the container was recreated.
+  The DNS resolvers in use are public (1.1.1.1, 8.8.8.8), so blocking private ranges does not affect name resolution.
+
+![rule chain](diagrams/40_egress_rule_chain.svg)
+![before and after](diagrams/41_egress_before_after.svg)
+
+**Verified** from the real sandbox container: pypi.org and github.com return 200; the LAN gateway, cloud metadata and
+Tika are blocked; Ollama answers; a Hermes run did a terminal `curl` plus browser navigate and snapshot successfully;
+both GPUs are still visible; Open WebUI still returns 200; the rules survived a service restart and a `daemon-reload`.
+
+**Not tested:** a full reboot, and IPv6 (the network has none configured). Proxy allowlisting by domain was not
+pursued. Anything the agent legitimately needs on the LAN is now blocked by design; add a narrow allow to the chain if so.
+
+![persistence and rollback](diagrams/42_egress_persistence_rollback.svg)
+
 ![egress options](diagrams/32_egress_options.svg)
 
 ### Test ladder and capability map
@@ -375,7 +399,7 @@ terminal:
 | cap-drop ALL (Hermes re-adds DAC_OVERRIDE, CHOWN, FOWNER), non-root uid 1000, 4 GB / 2 CPU | already on |
 | `--security-opt=no-new-privileges` | **added** (Hermes also sets it, so it appears twice; harmless) |
 | `--pids-limit=512` | **added** |
-| network egress | left open (web and curl are wanted) |
+| network egress | **now filtered**: private ranges and metadata blocked, internet open (see Corrections section) |
 | rw mounts of `/workspace` and `sandbox_ssh` | left as is: this is the real blast radius |
 | writable rootfs, runc runtime | left as is |
 
@@ -445,6 +469,10 @@ Re-render with `./render.sh`.
 | 36 | [Desktop stack in sandbox](diagrams/36_desktop_stack.png) |
 | 37 | [Browser verified flow](diagrams/37_browser_verified_flow.png) |
 | 38 | [Desktop build context](diagrams/38_desktop_build_context.png) |
+| 39 | [Egress network topology](diagrams/39_egress_network_topology.png) |
+| 40 | [Egress rule chain](diagrams/40_egress_rule_chain.png) |
+| 41 | [Egress before/after](diagrams/41_egress_before_after.png) |
+| 42 | [Egress persistence and rollback](diagrams/42_egress_persistence_rollback.png) |
 
 ## Repo layout
 
@@ -454,7 +482,7 @@ Re-render with `./render.sh`.
 README.md        this file
 SESSION.md       working log of the session
 config-diff.md   exact config changes and rollback
-sandbox/         Dockerfile.tools (toolbox image), Dockerfile.desktop (browser desktop image)
+sandbox/         Dockerfile.tools, Dockerfile.desktop, egress/ (firewall script + systemd unit)
 render.sh        re-render diagrams and logo
 assets/          logo.svg / logo.png
 diagrams/        *.dot *.png *.svg

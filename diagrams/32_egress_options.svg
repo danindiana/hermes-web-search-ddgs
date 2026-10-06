@@ -23,7 +23,7 @@
 <text text-anchor="middle" x="209" y="-61.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#e6edf3">A. DOCKER&#45;USER rules</text>
 <text text-anchor="middle" x="209" y="-46.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#e6edf3">block RFC1918 + metadata,</text>
 <text text-anchor="middle" x="209" y="-31.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#e6edf3">allow DNS, internet, host Ollama 11434</text>
-<text text-anchor="middle" x="209" y="-16.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#e6edf3">(recommended, reversible)</text>
+<text text-anchor="middle" x="209" y="-16.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#e6edf3">APPLIED (dedicated network + chain)</text>
 </g>
 <!-- q&#45;&gt;a -->
 <g id="edge1" class="edge">

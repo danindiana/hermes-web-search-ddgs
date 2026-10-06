@@ -8,6 +8,7 @@ h [label="Sandbox hardening", color="#58a6ff", fillcolor="#13294d"];
 ap [label="Applied / already on", color="#3fb950", fillcolor="#1f2937"];
 lo [label="Left open on purpose", color="#d29922", fillcolor="#1f2937"];
 a1 [label="cap-drop ALL", color="#3fb950", fillcolor="#1f2937"]; a2 [label="non-root uid 1000", color="#3fb950", fillcolor="#1f2937"]; a3 [label="no-new-privileges (new)", color="#3fb950", fillcolor="#1f2937"]; a4 [label="pids-limit 512 (new)", color="#3fb950", fillcolor="#1f2937"]; a5 [label="4 GB RAM, 2 CPU", color="#3fb950", fillcolor="#1f2937"];
-l1 [label="full network egress\n(web/curl wanted)", color="#d29922", fillcolor="#1f2937"]; l2 [label="rw /workspace + sandbox_ssh\n(real blast radius)", color="#f85149"]; l3 [label="writable rootfs, runc runtime", color="#d29922", fillcolor="#1f2937"];
+l1 [label="egress: private ranges blocked
+(internet open for web/pip/git)", color="#3fb950", fillcolor="#1f2937"]; l2 [label="rw /workspace + sandbox_ssh\n(real blast radius)", color="#f85149"]; l3 [label="writable rootfs, runc runtime", color="#d29922", fillcolor="#1f2937"];
 h->ap; h->lo; ap->a1; ap->a2; ap->a3; ap->a4; ap->a5; lo->l1; lo->l2; lo->l3;
 }

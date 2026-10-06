@@ -75,3 +75,12 @@ NVML Unknown Error. Control container removed. Single observation.
   2.71s, browser_snapshot 0.83s; Xvnc/xfwm4/xfdesktop running; GPUs still 2.
 - Blocklist live-tested on browser path: mail.google.com blocked in 0.06s.
 - Known: browser_console hit a removeChild TypeError (not investigated).
+
+## Egress rules applied (2026-10-06)
+- Dedicated docker network `hermes-sbx` (172.30.0.0/24) so only the Hermes sandbox is affected (Agent Zero shares the
+  default bridge and was left alone).
+- `/usr/local/sbin/hermes-sandbox-egress.sh` + systemd unit (enabled): chain HERMES-SBX-EGRESS rejects RFC1918, link-local
+  (metadata), CGNAT; internet stays open. UFW: 11434 from the subnet only.
+- Tested first on a throwaway container, then recreated the real sandbox with `--network=hermes-sbx`: internet 200, LAN +
+  metadata + Tika/Meili blocked, Ollama open, terminal curl + browser navigate/snapshot OK, 2 GPUs, Open WebUI 200,
+  rules survive service restart and daemon-reload. Not tested: reboot, IPv6.

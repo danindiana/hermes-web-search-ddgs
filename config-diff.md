@@ -95,3 +95,19 @@ Only the newest 3 `config.yaml.bak-*` files remain, so rollback is limited to re
 ```
 
 Built from `sandbox/Dockerfile.desktop`; the old container was removed and Hermes recreated it from the new image.
+
+## Egress policy
+
+```diff
+   docker_extra_args:
+     ...
+     - --pids-limit=512
++    - --network=hermes-sbx
+```
+
+Host side (not in config.yaml): `docker network create --subnet 172.30.0.0/24 --opt com.docker.network.bridge.name=br-hermes-sbx hermes-sbx`,
+`sandbox/egress/hermes-sandbox-egress.{sh,service}` installed to `/usr/local/sbin` and `/etc/systemd/system`,
+and `ufw allow from 172.30.0.0/24 to any port 11434 proto tcp`.
+
+Rollback: remove the `--network` arg; `systemctl disable --now hermes-sandbox-egress`; `ufw delete` that rule;
+`docker network rm hermes-sbx`; recreate the sandbox container.

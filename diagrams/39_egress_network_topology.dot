@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Egress design: a dedicated network so the rules hit only the sandbox";
+subgraph cluster_h { label="Host"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
+ fw [label="DOCKER-USER\n-s 172.30.0.0/24 -> HERMES-SBX-EGRESS", color="#bc8cff"]; ufw [label="UFW input:\nallow 11434 from 172.30.0.0/24 only", color="#3fb950", fillcolor="#1f2937"]; ol [label="Ollama 11434", color="#3fb950", fillcolor="#1f2937"]; sv [label="Tika 9998, Meilisearch 7700", color="#f85149"]; }
+sb [label="Hermes sandbox\nnetwork hermes-sbx (172.30.0.0/24)", color="#bc8cff", fillcolor="#1f2937", penwidth=3];
+az [label="agent-zero\ndefault bridge (untouched)", color="#39c5cf", fillcolor="#0d2e2e"];
+ow [label="Open WebUI stack\nowui-net (untouched)", color="#39c5cf", fillcolor="#0d2e2e"];
+inet [label="Internet", color="#d29922", fillcolor="#1f2937"]; lan [label="LAN + private ranges\n+ cloud metadata", color="#f85149"];
+sb->fw; fw->inet [label="allowed"]; fw->lan [label="REJECT", color="#f85149"]; sb->ufw; ufw->ol; sb->sv [style=dashed, color="#f85149", label="closed"];
+}

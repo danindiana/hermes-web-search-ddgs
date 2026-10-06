@@ -1,0 +1,14 @@
+[Unit]
+Description=Egress policy for the Hermes sandbox Docker network
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/hermes-sandbox-egress.sh start
+ExecStop=/usr/local/sbin/hermes-sandbox-egress.sh stop
+
+[Install]
+WantedBy=multi-user.target

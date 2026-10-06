@@ -1,0 +1,11 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Reachability from the sandbox: before vs after (measured)";
+subgraph cluster_b { label="BEFORE (default bridge)"; color="#f85149"; fontcolor="#f85149"; style=rounded;
+ b1 [label="internet: open", color="#3fb950", fillcolor="#1f2937"]; b2 [label="LAN gateway 80/443: open", color="#f85149"]; b3 [label="host Ollama: open", color="#3fb950", fillcolor="#1f2937"]; b4 [label="host Tika + Meilisearch: open", color="#f85149"]; b5 [label="cloud metadata: open (not blocked)", color="#f85149"]; }
+subgraph cluster_a { label="AFTER (hermes-sbx + rules)"; color="#3fb950"; fontcolor="#3fb950"; style=rounded;
+ a1 [label="internet: open (pypi, github 200)", color="#3fb950", fillcolor="#1f2937"]; a2 [label="LAN gateway: blocked", color="#3fb950", fillcolor="#1f2937"]; a3 [label="host Ollama: open (only this)", color="#3fb950", fillcolor="#1f2937"]; a4 [label="host Tika + Meilisearch: blocked", color="#3fb950", fillcolor="#1f2937"]; a5 [label="cloud metadata: blocked", color="#3fb950", fillcolor="#1f2937"]; }
+b1->a1; b2->a2; b3->a3; b4->a4; b5->a5;
+}

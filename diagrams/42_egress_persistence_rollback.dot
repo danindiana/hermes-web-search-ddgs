@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Persistence and rollback";
+rankdir=TB;
+s [label="systemd: hermes-sandbox-egress.service\nenabled, After/PartOf docker.service", color="#58a6ff", fillcolor="#13294d"];
+sc [label="/usr/local/sbin/hermes-sandbox-egress.sh start|stop\nidempotent, own chain", color="#58a6ff", fillcolor="#13294d"];
+t [label="Tested: service restart + daemon-reload\nrules intact, LAN still blocked", color="#3fb950", fillcolor="#1f2937"];
+u [label="UFW rule: 11434 from 172.30.0.0/24", color="#d29922", fillcolor="#1f2937"];
+rb [label="Rollback:\n1 remove --network=hermes-sbx from docker_extra_args\n2 systemctl disable --now hermes-sandbox-egress\n3 ufw delete the 11434 rule, docker network rm hermes-sbx\n4 recreate the sandbox container", color="#f0883e", shape=note];
+s->sc->t; sc->u [style=invis]; t->rb [style=dotted];
+n [label="Not tested: a full reboot\nIPv6 not configured on this network", color="#d29922", fillcolor="#1f2937", shape=note]; t->n [style=dotted];
+}

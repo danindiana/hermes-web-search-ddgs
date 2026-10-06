@@ -5,7 +5,7 @@ edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6,
 label="Egress options (review only, nothing changed)";
 rankdir=TB;
 q [label="Limit what the sandbox can reach?", color="#58a6ff", fillcolor="#13294d"];
-a [label="A. DOCKER-USER rules\nblock RFC1918 + metadata,\nallow DNS, internet, host Ollama 11434\n(recommended, reversible)", color="#3fb950", fillcolor="#1f2937"];
+a [label="A. DOCKER-USER rules\nblock RFC1918 + metadata,\nallow DNS, internet, host Ollama 11434\nAPPLIED (dedicated network + chain)", color="#3fb950", fillcolor="#1f2937"];
 b [label="B. Egress proxy allowlist\ndomain-level control\nmore moving parts", color="#d29922", fillcolor="#1f2937"];
 c [label="C. Leave open\nweb + pip + git all just work", color="#39c5cf", fillcolor="#0d2e2e"];
 r [label="Trade-off: A may break access to LAN services\nthe agent legitimately uses; test first", color="#f0883e", shape=note];
