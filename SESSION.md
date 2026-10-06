@@ -66,3 +66,12 @@ NVML Unknown Error. Control container removed. Single observation.
   earlier "browser runs on the host" claim was wrong. Decision pending (A sandboxed desktop image / B gateway / C off).
 - Domain blocklist added; matcher verified; NOT enforced by web_extract (third-party fetch); browser path untestable now.
 - Cleanup done within approved scope; Open WebUI healthy. Egress reviewed only (DOCKER-USER empty; LAN + host services reachable).
+
+## Browser: option A done (2026-10-06)
+- Built `hermes-sandbox:desktop-tools` (Dockerfile.desktop): Xvnc + Xfce parts + dbus + x11-utils + agent-browser 0.26.0 +
+  Playwright-layout Chromium 1208 (binaries copied from ~/.hermes/tools; not committed). All required binaries resolve;
+  0 missing Chromium libs.
+- Switched `terminal.docker_image`, removed old container, Hermes recreated it. Verified from agent.log: browser_navigate
+  2.71s, browser_snapshot 0.83s; Xvnc/xfwm4/xfdesktop running; GPUs still 2.
+- Blocklist live-tested on browser path: mail.google.com blocked in 0.06s.
+- Known: browser_console hit a removeChild TypeError (not investigated).

@@ -85,3 +85,13 @@ Rollback: restore the matching `config.yaml.bak-*`, remove the container so Herm
 ```
 
 Only the newest 3 `config.yaml.bak-*` files remain, so rollback is limited to recent states.
+
+## Browser desktop image
+
+```diff
+ terminal:
+-  docker_image: hermes-sandbox:tools
++  docker_image: hermes-sandbox:desktop-tools
+```
+
+Built from `sandbox/Dockerfile.desktop`; the old container was removed and Hermes recreated it from the new image.

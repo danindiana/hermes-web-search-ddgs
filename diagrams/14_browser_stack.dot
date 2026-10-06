@@ -2,10 +2,11 @@ digraph g {
 graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
 node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
 edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
-label="Browser stack: what Hermes expects vs what exists";
-a [label="Hermes browser_* tools\n(needs browser.backend: 'off')", color="#58a6ff", fillcolor="#13294d"];
+label="Browser stack: what Hermes expects and what exists now";
+a [label="Hermes browser_* tools\nbrowser.backend: 'off'", color="#58a6ff", fillcolor="#13294d"];
 p [label="bot_desktop.placement: auto\nfollows terminal.backend = docker", color="#bc8cff"];
-s [label="Sandbox must run: Xvnc, xfwm4, xfce4-panel,\nxfdesktop, xfsettingsd, dbus, xauth, xdpyinfo, xprop\n+ agent-browser + Chromium", color="#f85149"];
-h [label="Host has agent-browser 0.26.0 + chromium-1208\n(CLI smoke test passed headless)\nbut Hermes does not route there", color="#d29922", fillcolor="#1f2937"];
-a->p->s; h->p [style=dotted, label="not used"];
+s [label="Sandbox image desktop-tools:\nXvnc, Xfce parts, dbus, xauth, x11-utils,\nagent-browser, Chromium", color="#3fb950", fillcolor="#1f2937", penwidth=3];
+v [label="navigate + snapshot verified\nin real Hermes run", color="#3fb950", fillcolor="#1f2937"];
+h [label="Host agent-browser + chromium\n(only used for the CLI smoke test)", color="#d29922", fillcolor="#1f2937"];
+a->p->s->v; h->s [style=dotted, label="copied in at build"];
 }

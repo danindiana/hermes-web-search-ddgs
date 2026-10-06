@@ -1,0 +1,12 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Sandbox image chain, now with a desktop layer";
+rankdir=TB;
+base [label="hermes-sandbox:graphviz", color="#39c5cf", fillcolor="#0d2e2e"];
+pdf [label="hermes-sandbox:pdf\nPDF + OCR tooling", color="#58a6ff", fillcolor="#13294d"];
+tools [label="hermes-sandbox:tools\njq rg tmux sqlite3 zip rsync ffmpeg pandoc gh", color="#58a6ff", fillcolor="#13294d"];
+desk [label="hermes-sandbox:desktop-tools  (NEW, +0.9 GB, 9.98 GB total)\nXvnc + Xfce parts + dbus + agent-browser 0.26.0\n+ Playwright-layout Chromium 1208", color="#3fb950", fillcolor="#1f2937", penwidth=3];
+base->pdf->tools->desk [label="Dockerfile.desktop"];
+}

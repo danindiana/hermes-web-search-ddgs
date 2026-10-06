@@ -1,0 +1,15 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="What runs inside the sandbox for the browser";
+subgraph cluster_s { label="Docker sandbox (user pn, uid 1000, cap-drop ALL, +DAC_OVERRIDE, CHOWN, FOWNER)"; color="#bc8cff"; fontcolor="#bc8cff"; style="rounded,dashed";
+ l [label="launcher.sh\n(started by Hermes on demand)", color="#bc8cff"];
+ x [label="Xvnc :20\nUnix-socket RFB only", color="#58a6ff", fillcolor="#13294d"];
+ d [label="dbus-run-session", color="#39c5cf", fillcolor="#0d2e2e"];
+ xf [label="xfsettingsd, xfwm4,\nxfdesktop, xfce4-panel", color="#58a6ff", fillcolor="#13294d"];
+ ab [label="agent-browser CLI 0.26.0", color="#3fb950", fillcolor="#1f2937"];
+ ch [label="Chromium 1208\n/opt/playwright/chromium-1208", color="#3fb950", fillcolor="#1f2937"]; }
+h [label="Hermes browser_* tools (host)", color="#d29922", fillcolor="#1f2937"];
+h->l [label="docker exec"]; l->x; l->d; d->xf; h->ab; ab->ch; ch->x [label="DISPLAY"];
+}

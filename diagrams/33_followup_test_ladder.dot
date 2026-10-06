@@ -7,7 +7,7 @@ a [label="web_search via real ddgs\nlog: 7 results\nVERIFIED", color="#3fb950", 
 b [label="web_extract via keenable\nexample.com content\nVERIFIED", color="#3fb950", fillcolor="#1f2937"];
 c [label="blocklist matcher\nVERIFIED", color="#3fb950", fillcolor="#1f2937"];
 d [label="blocklist on web_extract\nNOT enforced (found)", color="#f85149"];
-e [label="agent-driven browsing\nBLOCKED: no desktop stack", color="#f85149"];
+e [label="agent-driven browsing\nVERIFIED (navigate + snapshot)\nblocklist on browser VERIFIED", color="#3fb950", fillcolor="#1f2937"];
 f [label="cleanup + Open WebUI health\nVERIFIED (HTTPS 200)", color="#3fb950", fillcolor="#1f2937"];
 a->b->c->d->e->f [style=invis];
 }

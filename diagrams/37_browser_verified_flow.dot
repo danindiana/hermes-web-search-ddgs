@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Browser verification: real evidence";
+a [label="hermes chat -t browser\nnavigate example.com", color="#58a6ff", fillcolor="#13294d"];
+b [label="agent.log: browser_navigate completed 2.71s\nbrowser_snapshot completed 0.83s", color="#3fb950", fillcolor="#1f2937"];
+c [label="Container: Xvnc, xfwm4, xfdesktop running\nimage = hermes-sandbox:desktop-tools", color="#3fb950", fillcolor="#1f2937"];
+d [label="navigate mail.google.com", color="#58a6ff", fillcolor="#13294d"];
+e [label="Blocked by website policy\n0.06s, matched rule in log", color="#3fb950", fillcolor="#1f2937"];
+f [label="Note: browser_console hit a JS\nremoveChild error (separate issue)", color="#d29922", fillcolor="#1f2937", shape=note];
+a->b->c; d->e; b->f [style=dotted];
+}

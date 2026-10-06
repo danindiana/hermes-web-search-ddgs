@@ -6,7 +6,7 @@ label="Whole system: what runs where (corrected)";
 subgraph cluster_h { label="Host (calisota)"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
  ag [label="Hermes agent + gateway", color="#58a6ff", fillcolor="#13294d"]; ws [label="web_search\nddgs (real, after fix)", color="#3fb950", fillcolor="#1f2937"]; ex [label="web_extract\nkeenable free tier", color="#3fb950", fillcolor="#1f2937"]; ol [label="Ollama models", color="#bc8cff"]; }
 subgraph cluster_d { label="Docker: hermes-sandbox:tools"; color="#bc8cff"; fontcolor="#bc8cff"; style="rounded,dashed";
- tm [label="terminal tool\nCLI toolbox, torch + 2 GPUs", color="#39c5cf", fillcolor="#0d2e2e"]; br [label="browser tool\nblocked: desktop stack missing", color="#f85149"]; }
+ tm [label="terminal tool\nCLI toolbox, torch + 2 GPUs", color="#39c5cf", fillcolor="#0d2e2e"]; br [label="browser tool\nverified in sandbox", color="#3fb950", fillcolor="#1f2937"]; }
 net [label="Internet", color="#d29922", fillcolor="#1f2937"];
-ag->ol; ag->ws; ag->ex; ag->tm; ag->br [style=dashed]; ws->net; ex->net; tm->net;
+ag->ol; ag->ws; ag->ex; ag->tm; ag->br; ws->net; ex->net; tm->net;
 }

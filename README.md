@@ -4,7 +4,7 @@
 
 # Giving Hermes Agent the web, plus a sturdier sandbox: DuckDuckGo search, headless browser, tools image, GPU fix
 
-![status](https://img.shields.io/badge/status-search%20%26%20extract%20live%20%C2%B7%20browser%20pending-d29922?style=for-the-badge)
+![status](https://img.shields.io/badge/status-search%2C%20extract%20%26%20browser%20live-3fb950?style=for-the-badge)
 ![license](https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge)
 ![hermes](https://img.shields.io/badge/Hermes%20Agent-local-58a6ff?style=for-the-badge)
 ![search](https://img.shields.io/badge/search-DuckDuckGo-de5833?style=for-the-badge&logo=duckduckgo&logoColor=white)
@@ -14,7 +14,7 @@
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-34%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-38%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
 config change that fixed it without any paid service or API key, the follow-up that enabled a local
@@ -193,36 +193,62 @@ Honest accounting:
 
 ## Browser access
 
-**Status: enabled in config, not yet working.** See the Corrections section; the original text of this section
-claimed a host-side headless browser, which turned out to be wrong for this setup.
+**Status: working, inside the Docker sandbox.** Verified in a real Hermes run: `browser_navigate` and
+`browser_snapshot` completed against https://example.com, with Xvnc, xfwm4 and xfdesktop running in the container.
 
-What exists: Chromium (`~/.hermes/tools/chromium-1208`) and the `agent-browser` 0.26.0 CLI under `~/.hermes/tools/`.
-The CLI smoke test (open https://example.com, snapshot, close) passed headless, outside Hermes's agent loop.
+How it got here (the browser needed three things): the toolset enabled, the default Browser Use CLI mode turned
+off, and a sandbox image that carries the desktop stack.
 
-Four access levels exist (local, CDP attach, real profile, cloud):
+Four access levels exist (local, CDP attach, real profile, cloud); this setup uses the sandboxed local one:
 
 ![access levels](diagrams/13_browser_access_levels.svg)
 
-What changed in config: `browser` removed from `agent.disabled_toolsets`, added to `platform_toolsets.cli`, and
-`browser.backend: 'off'` set (see below).
+### Config
+
+`browser` removed from `agent.disabled_toolsets`, added to `platform_toolsets.cli`, `browser.backend: 'off'`
+(without it Hermes swaps the standard `browser_*` tools for a single `browser_exec`, and the agent only saw vault
+tools), and `terminal.docker_image: hermes-sandbox:desktop-tools`.
 
 ![browser stack](diagrams/14_browser_stack.svg)
 
-### Why it does not run yet
+### Why the sandbox needs a desktop image
 
-1. **Default mode hides the tools.** With `browser.backend` unset, Hermes uses Browser Use CLI mode whenever its
-   harness is importable: the standard `browser_*` tools are replaced by a single `browser_exec`, and the agent
-   saw only vault tools. `browser.backend: 'off'` restores the standard tools (fixed).
-2. **The browser is placed inside the Docker sandbox by design.** `bot_desktop.placement: auto` follows
-   `terminal.backend: docker`. `browser_navigate` fails with: *Bot Desktop needs Xvnc, xfwm4, xfce4-panel,
-   xfdesktop, xfsettingsd, dbus-run-session, xauth, xdpyinfo, xprop inside the terminal backend's sandbox.*
-   `hermes-sandbox:tools` has none of that. Upstream's default image `nousresearch/hermes-sandbox:desktop` carries it.
+With `terminal.backend: docker`, `bot_desktop.placement: auto` puts the browser inside the sandbox, so pages the
+model chooses never touch the host. Hermes refuses to start it unless the image has Xvnc, xfwm4, xfce4-panel,
+xfdesktop, xfsettingsd, dbus-run-session, xauth, xdpyinfo and xprop, plus the `agent-browser` CLI and a Chromium.
+The error before the image existed was: *Bot Desktop needs Xvnc, xfwm4, ... inside the terminal backend's sandbox.*
 
 ![browser decision](diagrams/29_browser_mode_decision.svg)
 
-Options (not applied, your call): **A** build a sandboxed desktop image (keeps page content inside Docker;
-recommended), **B** `bot_desktop.placement: gateway` (browser runs on the host outside the sandbox, and the host
-also lacks Xvnc), **C** leave the browser off and rely on search + extract.
+### The desktop image
+
+[`sandbox/Dockerfile.desktop`](sandbox/Dockerfile.desktop) extends `hermes-sandbox:tools` (+0.9 GB, 9.98 GB total):
+apt packages for the desktop (tigervnc, Xfce parts, dbus, x11-utils, a few Chromium libraries, fonts), the
+`agent-browser` 0.26.0 binary, and the Playwright-layout Chromium 1208 at `/opt/playwright/chromium-1208`.
+The two binaries were copied from `~/.hermes/tools/` into the build context; they are about 360 MB and are not
+committed. The image was checked for all required binaries and for zero unresolved Chromium libraries.
+
+```bash
+# context needs assets/agent-browser and assets/chrome-linux64 (copied from ~/.hermes/tools)
+docker build -t hermes-sandbox:desktop-tools -f Dockerfile.desktop .
+```
+
+![image layers](diagrams/35_desktop_image_layers.svg)
+![build context](diagrams/38_desktop_build_context.svg)
+![desktop stack](diagrams/36_desktop_stack.svg)
+
+### Verification
+
+- `agent.log`: `browser_navigate completed (2.71s)`, `browser_snapshot completed (0.83s)`.
+- Container `docker exec`: `Xvnc`, `xfwm4`, `xfdesktop` running; image `hermes-sandbox:desktop-tools`; both GPUs still visible.
+- Blocklist on the browser path: navigating to `mail.google.com` returned `Blocked by website policy` in 0.06 s,
+  with the matched rule in the log.
+- Known issue: `browser_console` (page JavaScript evaluation) hit a `removeChild` TypeError on example.com. Navigation
+  and snapshots are unaffected; I did not investigate it.
+
+![verification](diagrams/37_browser_verified_flow.svg)
+
+The browser is in the sandbox, so everything in the egress review below applies to it too.
 
 ![risk model](diagrams/15_browser_risk_model.svg)
 
@@ -234,7 +260,7 @@ Honest list of what earlier versions of these docs got wrong, found while testin
 |---|---|
 | `ddgs` installed into the managed Python and working | Installed into the *base* runtime Python, which Hermes does not load. Hermes logged `ddgs package is not installed` and the keyless rescue ring silently served the searches, so they "worked". Fixed with `hermes tools post-setup ddgs`; log now shows `DDGS search ...: 7 results`. The stray base-Python install was removed. |
 | Browser runs on the host, outside the sandbox | With `terminal.backend: docker`, Hermes places the browser inside the sandbox (`placement: auto`) and refuses to run it elsewhere implicitly. |
-| Browser toolset enabled = browser available | Needed `browser.backend: 'off'`, and the sandbox still lacks the desktop stack. |
+| Browser toolset enabled = browser available | Needed `browser.backend: 'off'` plus a sandbox image with the desktop stack. Both done; browser verified working. |
 | "No sudo available" (sandbox GPU section) | Passwordless sudo works; already corrected earlier. |
 
 ![search reality](diagrams/26_search_backend_reality.svg)
@@ -249,9 +275,9 @@ Honest list of what earlier versions of these docs got wrong, found while testin
 ### Domain blocklist
 
 Added `security.website_blocklist` (enabled, 8 rules: Google accounts/mail, Microsoft login/outlook, Apple ID,
-PayPal). The matcher blocks them and allows others. **Coverage is partial:** the browser's navigation path calls the
-policy (code present, live test blocked because the browser cannot start), but `web_extract` via the third-party
-fetcher did **not** block `mail.google.com` (it returned the public landing page). Private IPs and cloud-metadata
+PayPal). The matcher blocks them and allows others. **Coverage is partial:** the browser's navigation path enforces the
+policy (live-tested: blocked in 0.06 s), but `web_extract` via the third-party
+fetcher did **not** block `mail.google.com` (it returned the public landing page). The browser path was live-tested later and does block it. Private IPs and cloud-metadata
 hosts are always blocked by `url_safety` regardless.
 
 ![blocklist coverage](diagrams/28_blocklist_coverage.svg)
@@ -346,7 +372,7 @@ terminal:
 
 | Control | State |
 |---|---|
-| cap-drop ALL, non-root uid 1000, 4 GB / 2 CPU | already on |
+| cap-drop ALL (Hermes re-adds DAC_OVERRIDE, CHOWN, FOWNER), non-root uid 1000, 4 GB / 2 CPU | already on |
 | `--security-opt=no-new-privileges` | **added** (Hermes also sets it, so it appears twice; harmless) |
 | `--pids-limit=512` | **added** |
 | network egress | left open (web and curl are wanted) |
@@ -415,6 +441,10 @@ Re-render with `./render.sh`.
 | 32 | [Egress options](diagrams/32_egress_options.png) |
 | 33 | [Follow-up test ladder](diagrams/33_followup_test_ladder.png) |
 | 34 | [Capability map](diagrams/34_capability_map.png) |
+| 35 | [Desktop image layers](diagrams/35_desktop_image_layers.png) |
+| 36 | [Desktop stack in sandbox](diagrams/36_desktop_stack.png) |
+| 37 | [Browser verified flow](diagrams/37_browser_verified_flow.png) |
+| 38 | [Desktop build context](diagrams/38_desktop_build_context.png) |
 
 ## Repo layout
 
@@ -424,7 +454,7 @@ Re-render with `./render.sh`.
 README.md        this file
 SESSION.md       working log of the session
 config-diff.md   exact config changes and rollback
-sandbox/         Dockerfile.tools (toolbox image)
+sandbox/         Dockerfile.tools (toolbox image), Dockerfile.desktop (browser desktop image)
 render.sh        re-render diagrams and logo
 assets/          logo.svg / logo.png
 diagrams/        *.dot *.png *.svg

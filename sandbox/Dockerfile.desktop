@@ -1,0 +1,30 @@
+# Adds the "Bot Desktop" stack Hermes needs to run its browser INSIDE the Docker sandbox
+# (bot_desktop.placement: auto with terminal.backend: docker), on top of hermes-sandbox:tools.
+#
+# Required binaries (tools/bot_desktop/sandbox_host.py _REQUIRED):
+#   Xvnc xfwm4 xfce4-panel xfdesktop xfsettingsd dbus-run-session xauth xdpyinfo xprop
+# plus the agent-browser CLI by name and a Playwright-layout Chromium under /opt/playwright.
+#
+# Build context must contain assets/agent-browser and assets/chrome-linux64, copied from
+# ~/.hermes/tools/agent-browser-0.26.0-linux-x64/bin/agent-browser-linux-x64 and
+# ~/.hermes/tools/chromium-1208/chrome-linux64 (kept out of git: ~360 MB).
+#   docker build -t hermes-sandbox:desktop-tools -f Dockerfile.desktop .
+FROM hermes-sandbox:tools
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tigervnc-standalone-server \
+    xfwm4 xfce4-panel xfdesktop4 xfce4-settings xfce4-terminal \
+    dbus-bin dbus-x11 xauth x11-utils x11-xkb-utils xdotool \
+    libxcomposite1 libxdamage1 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 \
+    fonts-liberation fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY assets/agent-browser /usr/local/bin/agent-browser
+COPY assets/chrome-linux64 /opt/playwright/chromium-1208/chrome-linux64
+RUN chmod 0755 /usr/local/bin/agent-browser && chmod -R a+rX /opt/playwright
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+
+USER pn

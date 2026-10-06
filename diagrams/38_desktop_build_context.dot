@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="How the desktop image was built (assets are not in git)";
+subgraph cluster_h { label="Host ~/.hermes/tools"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
+ h1 [label="chromium-1208/chrome-linux64\n364 MB", color="#58a6ff", fillcolor="#13294d"]; h2 [label="agent-browser-0.26.0 binary\n11 MB", color="#58a6ff", fillcolor="#13294d"]; }
+ctx [label="build context\nassets/chrome-linux64, assets/agent-browser\n+ Dockerfile.desktop", color="#d29922", fillcolor="#1f2937"];
+apt [label="apt: tigervnc, xfwm4, xfce4-panel, xfdesktop4,\nxfce4-settings, dbus-bin, x11-utils, libs, fonts", color="#39c5cf", fillcolor="#0d2e2e"];
+img [label="hermes-sandbox:desktop-tools", color="#3fb950", fillcolor="#1f2937"];
+h1->ctx; h2->ctx; ctx->img; apt->img;
+n [label="Only Dockerfile.desktop is committed;\nrepo .gitignore excludes assets/ binaries", color="#f0883e", shape=note]; n->ctx [style=dotted];
+}
