@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Local browser stack (verified pieces on disk)";
+a [label="Hermes agent\nbrowser_* tools", color="#58a6ff", fillcolor="#13294d"];
+t [label="tools/browser_tool.py\ncredential-scrubbed env", color="#58a6ff", fillcolor="#13294d"];
+c [label="agent-browser 0.26.0\n(Node CLI driver)", color="#bc8cff"];
+x [label="chromium-1208\nchrome-linux64 (headless)", color="#3fb950", fillcolor="#1f2937"];
+w [label="the web", color="#d29922", fillcolor="#1f2937"];
+s [label="per-task session\naccessibility snapshot with @eN refs", color="#39c5cf", fillcolor="#0d2e2e"];
+a->t->c->x->w; x->s [label="snapshot"]; s->a;
+n [label="Cloud keys are stripped from the driver env\nunless a cloud backend is selected", color="#f85149", shape=note]; n->c [style=dotted];
+}

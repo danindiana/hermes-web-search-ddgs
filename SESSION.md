@@ -27,7 +27,17 @@ neutral cwd showed it was not installed.
 - backed up config (`config.yaml.bak-1791314376`), edited, `hermes tools list` shows `web` enabled
 - documented this session (this folder)
 
+## Update: web search confirmed
+Operator independently confirmed web search works in the running instance; no reload needed.
+
 ## Open items
-- Hermes pts/0 session and gateway (pid 18297 at the time) must be restarted to load the change.
-- Not yet verified: an actual `web_search` call made by the agent end to end.
 - `web_extract` is not expected to work with the ddgs backend (search only per provider docstring).
+
+## Follow-up: browser access
+- Asked how to give Hermes full browser access. Found Chromium (`chromium-1208`) and `agent-browser` 0.26.0 already
+  installed; only the `browser` toolset was disabled. Presented 4 levels; operator chose option 1 (local headless).
+- Backed up config, removed `browser` from `disabled_toolsets`, added it to `platform_toolsets.cli`;
+  `hermes tools list` shows it enabled.
+- Smoke test with the driver CLI against https://example.com: open, snapshot, close all OK.
+- Not verified: agent-driven browsing, and whether running sessions need a restart.
+- Docs updated: README browser section, diagrams 13-15, config-diff.md.

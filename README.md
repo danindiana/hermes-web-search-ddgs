@@ -2,19 +2,21 @@
 
 <img src="assets/logo.png" alt="hermes://search logo" width="640">
 
-# Enabling keyless DuckDuckGo web search in Hermes Agent
+# Giving Hermes Agent the web: keyless DuckDuckGo search + a local headless browser
 
-![status](https://img.shields.io/badge/status-enabled%20(restart%20pending)-d29922?style=for-the-badge)
+![status](https://img.shields.io/badge/status-search%20live%20%C2%B7%20browser%20enabled-3fb950?style=for-the-badge)
 ![license](https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge)
 ![hermes](https://img.shields.io/badge/Hermes%20Agent-local-58a6ff?style=for-the-badge)
 ![search](https://img.shields.io/badge/search-DuckDuckGo-de5833?style=for-the-badge&logo=duckduckgo&logoColor=white)
 ![api key](https://img.shields.io/badge/API%20key-none%20needed-39c5cf?style=for-the-badge)
+![browser](https://img.shields.io/badge/browser-headless%20Chromium-58a6ff?style=for-the-badge&logo=googlechrome&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-12%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-15%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
-*A local Hermes agent said it had no web search. It was right. This repo documents why, and the small
-config change that fixed it without any paid service or API key.*
+*A local Hermes agent said it had no web search. It was right. This repo documents why, the small
+config change that fixed it without any paid service or API key, and the follow-up that enabled a local
+headless browser.*
 
 </div>
 
@@ -32,8 +34,9 @@ config change that fixed it without any paid service or API key.*
 9. [Alternatives](#alternatives)
 10. [Verification status](#verification-status)
 11. [Troubleshooting](#troubleshooting)
-12. [Diagram index](#diagram-index)
-13. [Repo layout](#repo-layout)
+12. [Browser access](#browser-access)
+13. [Diagram index](#diagram-index)
+14. [Repo layout](#repo-layout)
 
 ## TL;DR
 
@@ -43,7 +46,8 @@ config change that fixed it without any paid service or API key.*
 | 2 | Remove `web` (and `search`) from `agent.disabled_toolsets` | `~/.hermes/config.yaml` |
 | 3 | Add `web` to `platform_toolsets.cli` | `~/.hermes/config.yaml` |
 | 4 | Set `web.search_backend: ddgs` | `~/.hermes/config.yaml` |
-| 5 | Restart the Hermes session and gateway | shell |
+| 5 | Restart the Hermes session and gateway if the tool is missing | shell |
+| 6 | *(follow-up)* Enable the `browser` toolset | see [Browser access](#browser-access) |
 
 No API key, no account, no cost. Exact diff: [`config-diff.md`](config-diff.md).
 
@@ -138,7 +142,7 @@ test imports from a neutral directory such as `/tmp`.
   fail or be unavailable. The agent can still fetch pages with `curl` through the terminal tool.
 - **Rate limits.** DuckDuckGo is accessed through an unofficial scraping library and may throttle heavy use. The 30 s cap keeps
   the agent loop from hanging.
-- **Restart required.** Sessions that were already running loaded the old config.
+- **Restart.** Not needed in practice: the operator confirmed search worked in the running instance. If a session lacks the tool, restart it.
 - **Privacy.** Queries leave the machine to DuckDuckGo, unlike a self-hosted SearXNG.
 
 ## Alternatives
@@ -163,8 +167,7 @@ Honest accounting:
 | `DDGS().text()` live query from the managed Python returned results | done |
 | `config.yaml` parses and shows the intended values | done |
 | `hermes tools list` shows `web` enabled | done |
-| Hermes restarted | **pending** |
-| Agent performs a real `web_search` end to end | **pending, unverified** |
+| Agent performs a real `web_search` end to end | **done**, confirmed independently by the operator; no reload was needed |
 
 ![verification](diagrams/11_verification_flow.svg)
 ![timeline](diagrams/08_rollout_timeline.svg)
@@ -175,10 +178,70 @@ Honest accounting:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Agent still says no web search | session predates the edit | restart session and gateway |
+| Agent still says no web search | session predates the edit (not observed here) | restart session and gateway |
 | `ddgs package is not installed` | installed into the wrong Python | pip into the managed runtime |
 | Timeouts or empty results | rate limiting | wait, or switch backend |
 | `web_extract` errors | search-only backend | use `curl`, or add an extract backend |
+
+## Browser access
+
+Follow-up request: "how can we give our hermes agent instance full browser access?"
+
+Hermes already had a local browser installed (`~/.hermes/tools/chromium-1208`, driven by the
+`agent-browser` 0.26.0 Node CLI under `~/.hermes/tools/agent-browser-0.26.0-linux-x64`). The `browser`
+toolset was simply disabled. Four levels of access exist:
+
+![access levels](diagrams/13_browser_access_levels.svg)
+
+| Level | Mechanism | Risk |
+|---|---|---|
+| **1. Local headless Chromium (chosen)** | enable the `browser` toolset; fresh empty profile | low |
+| 2. Attach via CDP | `browser.cdp_url: http://127.0.0.1:9222`, Chrome started with `--remote-debugging-port=9222` | medium |
+| 3. Real profile | `browser.use_real_profile` (consent-gated) exposes cookies and logins | high |
+| 4. Cloud browser | Browserbase / Browser Use / Firecrawl, API key and cost | n/a |
+
+### Change made (level 1)
+
+```yaml
+agent:
+  disabled_toolsets:      # 'browser' removed from this list
+platform_toolsets:
+  cli:
+    - file
+    - web
+    - browser             # added
+    - skills
+    - terminal
+    - vision
+```
+
+`hermes tools list` then reports `browser  Browser Automation` as enabled.
+
+![browser stack](diagrams/14_browser_stack.svg)
+
+### Smoke test
+
+Run directly against the bundled driver, outside Hermes's agent loop:
+
+```bash
+export AGENT_BROWSER_EXECUTABLE_PATH=~/.hermes/tools/chromium-1208/chrome-linux64/chrome
+agent-browser-linux-x64 --session smoke open https://example.com   # prints the page title
+agent-browser-linux-x64 --session smoke snapshot                   # accessibility tree
+agent-browser-linux-x64 --session smoke close
+```
+
+It opened the page, returned a snapshot and closed cleanly. **Not yet verified:** the agent itself driving
+the browser through its `browser_*` tools, and whether an already-running session picks up the toolset
+without a restart.
+
+### Risk model
+
+The browser runs on the host, not inside the Docker sandbox, and a local model reading arbitrary pages can be
+prompt-injected. Level 1 keeps this small: an empty profile means no cookies or logins to steal. The
+driver environment is credential-scrubbed (cloud keys are only passed through when a cloud backend is used).
+Avoid level 3 unless there is a specific need. The diagram below is illustrative, not a threat model.
+
+![risk model](diagrams/15_browser_risk_model.svg)
 
 ## Diagram index
 
@@ -199,6 +262,9 @@ Re-render with `./render.sh`.
 | 10 | [Failure modes](diagrams/10_failure_modes.png) |
 | 11 | [Verification flow](diagrams/11_verification_flow.png) |
 | 12 | [Repo layout](diagrams/12_repo_layout.png) |
+| 13 | [Browser access levels](diagrams/13_browser_access_levels.png) |
+| 14 | [Browser stack](diagrams/14_browser_stack.png) |
+| 15 | [Browser risk model](diagrams/15_browser_risk_model.png) |
 
 ## Repo layout
 

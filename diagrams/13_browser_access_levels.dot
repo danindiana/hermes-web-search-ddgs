@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Browser access levels (option 1 chosen)";
+rankdir=TB;
+h [label="browser toolset", color="#58a6ff", fillcolor="#13294d"];
+o1 [label="1. Local headless Chromium\nfresh empty profile, no key\nCHOSEN", color="#3fb950", fillcolor="#1f2937", penwidth=3];
+o2 [label="2. Attach via CDP\nbrowser.cdp_url, e.g. 127.0.0.1:9222\nheaded, you can watch", color="#d29922", fillcolor="#1f2937"];
+o3 [label="3. Real profile\nbrowser.use_real_profile\ncookies + logins exposed", color="#f85149"];
+o4 [label="4. Cloud browser\nBrowserbase / Browser Use / Firecrawl\nAPI key, paid", color="#39c5cf", fillcolor="#0d2e2e"];
+h->o1 [label="low risk", color="#3fb950"]; h->o2 [label="medium", color="#d29922"]; h->o3 [label="high", color="#f85149"]; h->o4 [label="n/a here"];
+}

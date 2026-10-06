@@ -30,3 +30,20 @@ Package installed into Hermes's managed Python (not the repo `venv/`):
 ```
 
 Rollback: copy the backup over `config.yaml` and `pip uninstall ddgs`.
+
+## Follow-up: browser toolset (level 1, local headless Chromium)
+
+```diff
+ agent:
+   disabled_toolsets:
+-    - browser
+@@
+ platform_toolsets:
+   cli:
+     - file
+     - web
++    - browser
+```
+
+No package install was needed; Chromium and `agent-browser` were already under `~/.hermes/tools/`.
+Rollback: restore the matching `config.yaml.bak-*`.
