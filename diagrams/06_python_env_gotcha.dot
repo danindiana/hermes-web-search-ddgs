@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Which Python is Hermes really running? (install target matters)";
+l [label="~/.local/bin/hermes\n(sh launcher)", color="#39c5cf", fillcolor="#0d2e2e"];
+m [label="hermes-agent/.hermes/bin/hermes", color="#39c5cf", fillcolor="#0d2e2e"];
+s [label="~/.hermes/tools/python-3.14.7+.../bin/python3\n(managed runtime)", color="#3fb950", fillcolor="#1f2937"];
+v [label="hermes-agent/venv\n(has no ddgs; not the runtime)", color="#f85149"];
+i [label="python3 -m pip install ddgs==9.16.0\nran against the managed python", color="#d29922", fillcolor="#1f2937"];
+x [label="Misread I caught: 'import ddgs' succeeded\nonly because cwd was plugins/web/,\nwhose ddgs/ folder is a namespace package", color="#f0883e", shape=note];
+l->m->s; i->s; v->s [style=dashed, label="not used"]; x->v [style=dotted];
+}

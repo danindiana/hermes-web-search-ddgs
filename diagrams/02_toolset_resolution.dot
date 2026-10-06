@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="How a toolset reaches the agent (disabled_toolsets is strict)";
+node [shape=box];
+reg [label="toolsets.py registry\nweb = web_search + web_extract\nsearch = web_search only", color="#58a6ff", fillcolor="#13294d"];
+pt [label="platform_toolsets.cli\n(what the platform asks for)", color="#3fb950", fillcolor="#1f2937"];
+dt [label="agent.disabled_toolsets\n(strict deny list)", color="#f85149"];
+res [label="Resolved tool list\nfor the session", color="#d29922", fillcolor="#1f2937"];
+llm [label="LLM sees web_search?", color="#bc8cff"];
+reg->pt [label="names"]; pt->res; dt->res [label="subtracts", color="#f85149"]; res->llm;
+}

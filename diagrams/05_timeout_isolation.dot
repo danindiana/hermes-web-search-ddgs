@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Why searches run in a killable child process (30s hard cap)";
+subgraph cluster_p { label="parent (agent)"; color="#58a6ff"; fontcolor="#58a6ff"; style=rounded;
+ poll [label="poll stdout + interrupt flag\nevery 0.1s", color="#58a6ff", fillcolor="#13294d"];
+ term [label="terminate(), wait 1s,\nthen kill()", color="#f85149"]; }
+subgraph cluster_c { label="child worker"; color="#bc8cff"; fontcolor="#bc8cff"; style=rounded;
+ nat [label="ddgs/primp native code\nmay block holding the GIL", color="#d29922", fillcolor="#1f2937"]; }
+why [label="A thread timeout can never fire\nwhile the GIL is held, and Ctrl+C\nwould freeze the process", color="#f0883e", shape=note];
+poll->nat [label="waits"]; poll->term [label="30s cap or interrupt"]; term->nat [label="SIGTERM/SIGKILL", color="#f85149"]; why->nat [style=dotted];
+}

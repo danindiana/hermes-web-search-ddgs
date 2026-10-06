@@ -1,0 +1,10 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Repository layout";
+rankdir=TB;
+r [label="hermes-web-search-ddgs/", color="#58a6ff", fillcolor="#13294d"];
+f1 [label="README.md", color="#3fb950", fillcolor="#1f2937"]; f2 [label="SESSION.md", color="#3fb950", fillcolor="#1f2937"]; f3 [label="config-diff.md", color="#3fb950", fillcolor="#1f2937"]; f4 [label="diagrams/\n*.dot *.png *.svg", color="#d29922", fillcolor="#1f2937"]; f5 [label="assets/logo.svg/.png", color="#39c5cf", fillcolor="#0d2e2e"]; f6 [label="render.sh", color="#bc8cff"];
+r->f1; r->f2; r->f3; r->f4; r->f5; r->f6;
+}

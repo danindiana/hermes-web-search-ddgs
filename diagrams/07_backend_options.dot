@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Search backends available in plugins/web/ (illustrative cost view)";
+rankdir=TB;
+h [label="web.search_backend", color="#58a6ff", fillcolor="#13294d"];
+dd [label="ddgs\nno key, free\nsearch only", color="#3fb950", fillcolor="#1f2937"];
+br [label="brave-free\nBRAVE_SEARCH_API_KEY\nfree signup, ~2k queries/mo", color="#d29922", fillcolor="#1f2937"];
+sx [label="searxng\nself-hosted, local", color="#39c5cf", fillcolor="#0d2e2e"];
+pd [label="exa / parallel / firecrawl\nAPI key, template lines in .env", color="#f0883e"];
+h->dd [label="CHOSEN", color="#3fb950", penwidth=3]; h->br; h->sx; h->pd;
+}

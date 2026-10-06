@@ -1,0 +1,10 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Session timeline";
+a [label="1 Ask: is it true?", color="#39c5cf", fillcolor="#0d2e2e"]; b [label="2 Inspect config + .env", color="#58a6ff", fillcolor="#13294d"]; c [label="3 Compare options\n(ddgs / brave)", color="#58a6ff", fillcolor="#13294d"];
+d [label="4 pip install ddgs", color="#3fb950", fillcolor="#1f2937"]; e [label="5 Smoke test DDGS().text()\n2 results", color="#3fb950", fillcolor="#1f2937"]; f [label="6 Edit config.yaml\n(backup first)", color="#d29922", fillcolor="#1f2937"];
+g [label="7 hermes tools list:\nweb enabled", color="#3fb950", fillcolor="#1f2937"]; h [label="8 Restart Hermes\n(PENDING)", color="#f85149"];
+a->b->c->d->e->f->g->h;
+}

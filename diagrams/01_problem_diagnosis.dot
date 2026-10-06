@@ -1,0 +1,13 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Diagnosis: why Hermes said it had no web search";
+q [label="User: 'agent says it has no\nweb search - true?'", color="#39c5cf", fillcolor="#0d2e2e"];
+c [label="~/.hermes/config.yaml", color="#58a6ff", fillcolor="#13294d"];
+d [label="agent.disabled_toolsets\nlists web, search, x_search, browser", color="#f85149"];
+p [label="platform_toolsets.cli =\nfile, skills, terminal, vision\n(no web)", color="#f85149"];
+k [label=".env provider keys\n(Exa / Parallel / Firecrawl)\nall commented out", color="#f85149"];
+v [label="Verdict: TRUE\nconfig, not a bug", color="#d29922", fillcolor="#1f2937"];
+q->c; c->d; c->p; c->k; d->v; p->v; k->v;
+}

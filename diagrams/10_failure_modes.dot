@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="Failure modes and what you would see";
+rankdir=TB;
+s [label="web_search fails", color="#f85149"];
+a [label="ddgs not importable\n'run pip install ddgs'", color="#d29922", fillcolor="#1f2937"];
+b [label="rate limited / blocked\n(30s cap, then error)", color="#d29922", fillcolor="#1f2937"];
+c [label="web_extract unavailable\n(ddgs is search only)", color="#d29922", fillcolor="#1f2937"];
+d [label="tool absent\nsession predates config edit", color="#d29922", fillcolor="#1f2937"];
+a2 [label="pip into managed python", color="#3fb950", fillcolor="#1f2937"]; b2 [label="back off, or switch to brave-free / searxng", color="#3fb950", fillcolor="#1f2937"]; c2 [label="use terminal curl or add an extract backend", color="#3fb950", fillcolor="#1f2937"]; d2 [label="restart pts/0 + gateway", color="#3fb950", fillcolor="#1f2937"];
+s->a->a2; s->b->b2; s->c->c2; s->d->d2;
+}
