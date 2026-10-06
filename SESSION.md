@@ -90,3 +90,9 @@ NVML Unknown Error. Control container removed. Single observation.
   `let h = querySelector('h1'); document.body.removeChild(h)` -> TypeError at col 53 = removeChild(null).
 - CLI check: example.com now has 0 h1, 0 h2; body = STYLE, svg, 6 P, A, SCRIPT. Not a Hermes/browser bug; tool returned
   a clean success:false error. Model also called a paragraph the "heading" and misreported console-call count (3 vs 5).
+
+## Docker restart test (2026-10-06)
+`sudo systemctl restart docker`: hermes-sbx network + HERMES-SBX-EGRESS chain intact, egress service active, 4 containers
+back via unless-stopped (Open WebUI healthy, 200). Sandbox (no restart policy) stayed stopped, Hermes restarted it on the next
+terminal call (same container name). Egress re-verified inside it: internet 200; LAN gw, metadata, Tika blocked; Ollama open;
+2 GPUs. Full machine reboot still untested.

@@ -345,7 +345,13 @@ Instead the sandbox moved to its own network, `hermes-sbx` (172.30.0.0/24), and 
 Tika are blocked; Ollama answers; a Hermes run did a terminal `curl` plus browser navigate and snapshot successfully;
 both GPUs are still visible; Open WebUI still returns 200; the rules survived a service restart and a `daemon-reload`.
 
-**Not tested:** a full reboot, and IPv6 (the network has none configured). Proxy allowlisting by domain was not
+**Docker restart test:** `sudo systemctl restart docker` (tears down and rebuilds all Docker networking). Afterwards the
+`hermes-sbx` network and the `HERMES-SBX-EGRESS` chain were intact and the egress service was active; the four containers with
+an `unless-stopped` policy came back (Open WebUI healthy, HTTPS 200); the sandbox, which has no restart policy, stayed
+stopped until Hermes started it again on its next terminal call. Re-testing from inside it gave the same result as before:
+internet 200, LAN gateway and metadata blocked, Tika blocked, Ollama open, both GPUs visible.
+
+**Not tested:** a full machine reboot (boot ordering, UFW loading at startup), and IPv6 (the network has none configured). Proxy allowlisting by domain was not
 pursued. Anything the agent legitimately needs on the LAN is now blocked by design; add a narrow allow to the chain if so.
 
 ![persistence and rollback](diagrams/42_egress_persistence_rollback.svg)
