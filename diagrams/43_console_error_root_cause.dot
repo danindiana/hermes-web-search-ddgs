@@ -1,0 +1,14 @@
+digraph g {
+graph [bgcolor="#0d1117", rankdir=LR, fontname="Helvetica", fontcolor="#e6edf3", labelloc="t", fontsize=20, pad=0.4];
+node  [fontname="Helvetica", fontcolor="#e6edf3", color="#30363d", style="filled,rounded", shape=box, penwidth=2, margin="0.25,0.18", fillcolor="#161b22"];
+edge  [color="#8b949e", fontname="Helvetica", fontcolor="#adbac7", penwidth=1.6, arrowsize=0.9];
+label="browser_console TypeError: root cause (not a Hermes or browser bug)";
+a [label="Agent asked for the page heading", color="#58a6ff", fillcolor="#13294d"];
+b [label="Agent runs JS:\nquerySelector('h1')?.textContent\n-> null (twice)", color="#d29922", fillcolor="#1f2937"];
+c [label="Page reality (CLI check):\nh1 = 0, h2 = 0\nbody: STYLE, svg, 6x P, A, SCRIPT", color="#39c5cf", fillcolor="#0d2e2e"];
+d [label="Agent then runs a MUTATING script:\nlet h = querySelector('h1');\ndocument.body.removeChild(h)", color="#f0883e"];
+e [label="removeChild(null)\nTypeError: parameter 1 is not of type 'Node'\nat <anonymous>:1:53", color="#f85149"];
+f [label="Tool behaved correctly:\nreturned success:false + the JS error", color="#3fb950", fillcolor="#1f2937"];
+g [label="Agent recovers with a read-only\nexpression and answers", color="#3fb950", fillcolor="#1f2937"];
+a->b->d->e->f->g; c->b [style=dotted, label="explains null"];
+}

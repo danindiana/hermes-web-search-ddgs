@@ -14,7 +14,7 @@
 ![gpu](https://img.shields.io/badge/GPU-2%C3%97%20NVIDIA-76b900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![python](https://img.shields.io/badge/python-3.14.7-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![ddgs](https://img.shields.io/badge/ddgs-9.16.0-bc8cff?style=for-the-badge)
-![diagrams](https://img.shields.io/badge/diagrams-42%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
+![diagrams](https://img.shields.io/badge/diagrams-43%20Graphviz-0d1117?style=for-the-badge&logo=graphviz&logoColor=white)
 
 *A local Hermes agent said it had no web search. It was right. This repo documents why, the small
 config change that fixed it without any paid service or API key, the follow-up that enabled a local
@@ -243,10 +243,31 @@ docker build -t hermes-sandbox:desktop-tools -f Dockerfile.desktop .
 - Container `docker exec`: `Xvnc`, `xfwm4`, `xfdesktop` running; image `hermes-sandbox:desktop-tools`; both GPUs still visible.
 - Blocklist on the browser path: navigating to `mail.google.com` returned `Blocked by website policy` in 0.06 s,
   with the matched rule in the log.
-- Known issue: `browser_console` (page JavaScript evaluation) hit a `removeChild` TypeError on example.com. Navigation
-  and snapshots are unaffected; I did not investigate it.
+- `browser_console` (page JavaScript evaluation) logged a `removeChild` TypeError on example.com. Investigated: it is
+  not a bug in Hermes or the browser stack; see the next section.
 
 ![verification](diagrams/37_browser_verified_flow.svg)
+
+### The `browser_console` TypeError, investigated
+
+Transcript and log evidence (Hermes `state.db` messages plus `agent.log`):
+
+- The agent first ran `document.querySelector('h1')?.textContent`, twice; both returned `null`.
+- It then ran a script that *mutates the page*: `let h = document.querySelector('h1'); document.body.removeChild(h)`.
+  The error position `<anonymous>:1:53` is exactly the `removeChild(` call.
+- A direct CLI check shows why `h` was `null`: today's example.com has **no `<h1>` or `<h2>`**. `body` contains a
+  `STYLE`, an `svg`, six `P`, an `A` and a `SCRIPT` (the page is now a multilingual notice, not the classic heading).
+  `removeChild(null)` throws precisely `TypeError: ... parameter 1 is not of type 'Node'`.
+- The tool did its job: it returned `{"success": false, "error": "Evaluation error: ..."}` and the agent recovered with a
+  read-only expression.
+
+So the "issue" is the model's wrong assumption plus an unnecessary DOM-mutating script, nothing to fix in the stack.
+Side observations: the agent labelled a paragraph as the page's "heading" and reported 3 console calls when it made 5,
+a reminder that its self-reports need checking against logs. Hermes also wraps browser output in
+`<untrusted_tool_result>` markers telling the model to treat it as data, and `browser_console` runs an evaluation
+policy check before executing expressions (both seen in the code and transcript, not tested adversarially).
+
+![console error](diagrams/43_console_error_root_cause.svg)
 
 The browser is in the sandbox, so everything in the egress review below applies to it too.
 
@@ -473,6 +494,7 @@ Re-render with `./render.sh`.
 | 40 | [Egress rule chain](diagrams/40_egress_rule_chain.png) |
 | 41 | [Egress before/after](diagrams/41_egress_before_after.png) |
 | 42 | [Egress persistence and rollback](diagrams/42_egress_persistence_rollback.png) |
+| 43 | [browser_console error root cause](diagrams/43_console_error_root_cause.png) |
 
 ## Repo layout
 

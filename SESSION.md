@@ -74,7 +74,7 @@ NVML Unknown Error. Control container removed. Single observation.
 - Switched `terminal.docker_image`, removed old container, Hermes recreated it. Verified from agent.log: browser_navigate
   2.71s, browser_snapshot 0.83s; Xvnc/xfwm4/xfdesktop running; GPUs still 2.
 - Blocklist live-tested on browser path: mail.google.com blocked in 0.06s.
-- Known: browser_console hit a removeChild TypeError (not investigated).
+- browser_console removeChild TypeError: investigated later; agent's own JS on a page with no h1 (see below).
 
 ## Egress rules applied (2026-10-06)
 - Dedicated docker network `hermes-sbx` (172.30.0.0/24) so only the Hermes sandbox is affected (Agent Zero shares the
@@ -84,3 +84,9 @@ NVML Unknown Error. Control container removed. Single observation.
 - Tested first on a throwaway container, then recreated the real sandbox with `--network=hermes-sbx`: internet 200, LAN +
   metadata + Tika/Meili blocked, Ollama open, terminal curl + browser navigate/snapshot OK, 2 GPUs, Open WebUI 200,
   rules survive service restart and daemon-reload. Not tested: reboot, IPv6.
+
+## browser_console error investigated (2026-10-06)
+- state.db transcript for session 20261006_152814_c58bc8: agent ran querySelector('h1') (null twice), then
+  `let h = querySelector('h1'); document.body.removeChild(h)` -> TypeError at col 53 = removeChild(null).
+- CLI check: example.com now has 0 h1, 0 h2; body = STYLE, svg, 6 P, A, SCRIPT. Not a Hermes/browser bug; tool returned
+  a clean success:false error. Model also called a paragraph the "heading" and misreported console-call count (3 vs 5).
